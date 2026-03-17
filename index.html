@@ -8,42 +8,42 @@
     :root { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --line: #94a3b8; }
     body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; overflow: hidden; height: 100vh; width: 100vw; touch-action: none; }
     
-    /* HEADER & TOOLBAR */
-    .header { position: fixed; top: 0; left: 0; right: 0; background: #1e293b; color: white; padding: 15px; text-align: center; z-index: 1001; }
-    .toolbar { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; gap: 8px; z-index: 1000; border: 1px solid #cbd5e1; align-items: center; }
+    /* HEADER & TOOLBAR - Fixed Spacing */
+    .header { position: fixed; top: 0; left: 0; right: 0; background: #1e293b; color: white; padding: 15px; text-align: center; z-index: 2000; height: 40px; }
+    .header h1 { margin: 0; font-size: 22px; }
     
-    .tool-btn { padding: 8px 12px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
-    .zoom-btn { background: #e2e8f0; color: #1e293b; width: 40px; font-size: 16px; }
+    /* Pushed the toolbar down to 85px so it doesn't hide */
+    .toolbar { position: fixed; top: 85px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 25px; border-radius: 50px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: flex; gap: 10px; z-index: 1000; border: 2px solid #3b82f6; align-items: center; }
+    
+    .tool-btn { padding: 10px 15px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase; transition: 0.2s; }
+    .zoom-btn { background: #334155; color: white; width: 45px; font-size: 18px; }
     .export-btn { background: #3b82f6; color: white; }
+    .load-btn { background: #64748b; color: white; }
     .share-btn { background: #f59e0b; color: white; }
 
-    /* VIEWPORT */
     #viewport { width: 100%; height: 100%; cursor: grab; display: flex; align-items: center; justify-content: center; }
     #viewport:active { cursor: grabbing; }
-    #tree-container { transform-origin: center center; transition: transform 0.1s ease-out; padding-top: 150px; }
+    #tree-container { transform-origin: center center; transition: transform 0.1s ease-out; padding-top: 200px; }
 
-    /* TREE STRUCTURE */
-    .tree ul { display: flex; justify-content: center; padding: 20px 0 0 0; position: relative; }
-    .tree li { text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; }
-    .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line); width: 50%; height: 20px; }
-    .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line); }
+    .tree ul { display: flex; justify-content: center; padding: 25px 0 0 0; position: relative; }
+    .tree li { text-align: center; list-style-type: none; position: relative; padding: 25px 15px 0 15px; }
+    .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 3px solid var(--line); width: 50%; height: 25px; }
+    .tree li::after { right: auto; left: 50%; border-left: 3px solid var(--line); }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
     .tree li:only-child { padding-top: 0; }
-    .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line); width: 0; height: 20px; }
+    .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 3px solid var(--line); width: 0; height: 25px; }
 
-    /* CARDS */
-    .tree-node { background: var(--card); border: 2px solid #e2e8f0; border-radius: 15px; width: 240px; padding: 15px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .avatar-pair { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; }
-    .marriage-line { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 30px; height: 2px; background: var(--line); }
-    .node-avatar { width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; background-size: cover; background-position: center; position: relative; z-index: 2; }
+    .tree-node { background: var(--card); border: 2px solid #e2e8f0; border-radius: 18px; width: 250px; padding: 18px; display: inline-block; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+    .avatar-pair { display: flex; justify-content: center; gap: 12px; margin-bottom: 12px; position: relative; }
+    .marriage-line { position: absolute; top: 35px; left: 50%; transform: translateX(-50%); width: 35px; height: 3px; background: var(--line); }
+    .node-avatar { width: 70px; height: 70px; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; cursor: pointer; background-size: cover; background-position: center; position: relative; z-index: 2; }
     
     .male { background: #3b82f6; color: white; }
     .female { background: #ec4899; color: white; }
-    .name-tag { font-weight: bold; color: var(--text); font-size: 15px; margin-top: 8px; min-height: 20px; }
+    .name-tag { font-weight: 800; color: var(--text); font-size: 17px; margin-top: 10px; }
 
-    /* BUTTONS INSIDE CARDS */
-    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 15px; }
-    .btn { padding: 8px 5px; border: none; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+    .btn { padding: 10px 5px; border: none; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     .edit-btn { background: #f1f5f9; color: #475569; }
     .add-btn { background: #10b981; color: white; }
     .spouse-btn { background: #8b5cf6; color: white; }
@@ -57,7 +57,7 @@
     <button class="tool-btn zoom-btn" onclick="zoom(1.2)">➕</button>
     <button class="tool-btn zoom-btn" onclick="zoom(0.8)">➖</button>
     <button class="tool-btn export-btn" onclick="exportData()">💾 Save</button>
-    <button class="tool-btn export-btn" style="background:#64748b" onclick="document.getElementById('fileInput').click()">📂 Load</button>
+    <button class="tool-btn load-btn" onclick="document.getElementById('fileInput').click()">📂 Load</button>
     <button class="tool-btn share-btn" onclick="copyLink()">🔗 Link</button>
     <input type="file" id="fileInput" style="display: none" onchange="importData(event)">
   </div>
@@ -70,11 +70,9 @@
     let scale = 1, pointX = 0, pointY = 0, start = { x: 0, y: 0 }, isDragging = false;
     const container = document.getElementById('tree-container');
 
-    // Zooming
     window.addEventListener('wheel', (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? 0.9 : 1.1); }, { passive: false });
     function zoom(amount) { scale *= amount; updateTransform(); }
 
-    // Panning
     window.onmousedown = (e) => { if(e.target.closest('.btn') || e.target.closest('.node-avatar')) return; isDragging = true; start = { x: e.clientX - pointX, y: e.clientY - pointY }; };
     window.onmousemove = (e) => { if (!isDragging) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; updateTransform(); };
     window.onmouseup = () => isDragging = false;
@@ -82,9 +80,8 @@
 
     function copyLink() { navigator.clipboard.writeText(window.location.href); alert("Link copied to clipboard!"); }
 
-    // Family Logic
-    let familyData = JSON.parse(localStorage.getItem('daaboul_v7')) || [{ id: 1, name: "New Tree", gender: "male", parentId: null }];
-    function save() { localStorage.setItem('daaboul_v7', JSON.stringify(familyData)); render(); }
+    let familyData = JSON.parse(localStorage.getItem('daaboul_v8')) || [{ id: 1, name: "New Tree", gender: "male", parentId: null }];
+    function save() { localStorage.setItem('daaboul_v8', JSON.stringify(familyData)); render(); }
 
     function editPerson(id) { 
       const p = familyData.find(x => x.id === id);
