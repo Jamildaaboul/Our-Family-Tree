@@ -2,279 +2,195 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Family Tree - Pro Edition</title>
+  <title>The Daaboul Family Tree</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    /* THEMES */
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #1e293b;
-      --text-sub: #64748b;
-      --line-color: #cbd5e1;
-    }
-
-    body.theme-parchment {
-      --bg-color: #f4ece0;
-      --card-bg: #fdfaf5;
-      --text-main: #5d4037;
-      --text-sub: #8d6e63;
-      --line-color: #d7ccc8;
-    }
-
-    body.theme-dark {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-main: #f1f5f9;
-      --text-sub: #94a3b8;
-      --line-color: #334155;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --line: #94a3b8;
+      --accent: #3b82f6;
     }
 
     body {
-      font-family: system-ui, sans-serif;
-      background-color: var(--bg-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
       margin: 0;
-      padding: 20px;
-      overflow-x: auto;
-      transition: background 0.3s ease;
+      overflow: hidden; /* Important for Pan/Zoom */
+      height: 100vh;
+      width: 100vw;
     }
 
-    /* Toolbar */
+    /* HEADER */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #1e293b; color: white;
+      padding: 15px; text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1001;
+    }
+    .header h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+
+    /* TOOLBAR */
     .toolbar {
-      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
       background: white; padding: 10px 20px; border-radius: 50px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; gap: 10px; z-index: 1000;
       border: 1px solid #cbd5e1; align-items: center;
     }
 
-    .tool-btn, .theme-select {
-      padding: 8px 12px; border-radius: 20px; border: none; cursor: pointer;
-      font-weight: bold; font-size: 11px; text-transform: uppercase;
-    }
-    .export-btn { background-color: #3b82f6; color: white; }
-    .import-btn { background-color: #64748b; color: white; }
-    .download-btn { background-color: #10b981; color: white; }
-    .theme-select { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .tool-btn { padding: 8px 15px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; transition: 0.2s; }
+    .export-btn { background: #3b82f6; color: white; }
+    .download-btn { background: #10b981; color: white; }
+    .zoom-info { font-size: 10px; color: #64748b; font-weight: bold; }
 
-    /* Tree Layout */
-    #tree-capture-area { padding: 50px; display: inline-block; min-width: 100%; text-align: center; }
-    
+    /* ZOOM & PAN CONTAINER */
+    #viewport {
+      width: 100%; height: 100%;
+      cursor: grab;
+      display: flex; align-items: center; justify-content: center;
+      padding-top: 100px;
+    }
+    #viewport:active { cursor: grabbing; }
+
     #tree-container {
-      display: inline-flex; justify-content: center; align-items: flex-start;
-      margin-top: 60px; transform: scale(0.85); transform-origin: top center;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
     }
 
-    .tree-node {
-      background-color: var(--card-bg); border: 2px solid var(--line-color); border-radius: 12px;
-      width: 230px; padding: 15px; display: inline-flex; flex-direction: column;
-      align-items: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); position: relative;
-    }
-
-    .avatar-pair { display: flex; gap: 12px; margin-bottom: 12px; }
-    .node-avatar {
-      width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      font-size: 20px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      cursor: pointer; background-size: cover; background-position: center; position: relative;
-    }
-    .node-avatar:hover::after { content: '📷'; position: absolute; background: rgba(0,0,0,0.4); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; }
-
-    .male { background-color: #3b82f6; color: white; }   
-    .female { background-color: #ec4899; color: white; } 
-
-    .node-name { margin: 5px 0 0; font-size: 16px; color: var(--text-main); font-weight: bold; }
-    .spouse-text { color: var(--text-sub); font-size: 14px; margin: 2px 0; font-style: italic; }
-    .node-info { margin: 2px 0 10px 0; font-size: 12px; color: var(--text-sub); }
-
-    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; }
-    .btn { padding: 6px 0; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-    .edit-btn { background-color: #e2e8f0; color: #475569; }
-    .add-btn { background-color: #10b981; color: white; }
-    .spouse-btn { background-color: #8b5cf6; color: white; }
-    .del-btn { background-color: #ef4444; color: white; }
-
-    /* Lines */
-    .tree ul { padding-top: 20px; position: relative; display: flex; justify-content: center; margin: 0; padding-left: 0; }
+    /* TREE STYLES */
+    .tree ul { padding-top: 20px; position: relative; display: flex; justify-content: center; padding-left: 0; }
     .tree li { text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; }
-    .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line-color); width: 50%; height: 20px; }
-    .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
+    
+    /* Connectors */
+    .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line); width: 50%; height: 20px; }
+    .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line); }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
     .tree li:only-child { padding-top: 0; }
+    .tree li:first-child::after { border-radius: 8px 0 0 0; }
+    .tree li:last-child::before { border-right: 2px solid var(--line); border-radius: 0 8px 0 0; }
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-    .tree li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
-    .tree li:first-child::after { border-radius: 5px 0 0 0; }
-    .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line-color); width: 0; height: 20px; }
+    .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line); width: 0; height: 20px; }
+
+    /* CARDS */
+    .tree-node {
+      background: var(--card); border: 2px solid #e2e8f0;
+      border-radius: 15px; width: 240px; padding: 15px;
+      display: inline-block; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .avatar-pair { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; position: relative; }
+    
+    /* Marriage Line */
+    .marriage-line {
+        position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+        width: 40px; height: 2px; background: var(--line); z-index: 1;
+    }
+
+    .node-avatar {
+      width: 65px; height: 65px; border-radius: 50%;
+      border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 22px; cursor: pointer;
+      background-size: cover; background-position: center;
+      position: relative; z-index: 2;
+    }
+    .node-avatar:hover::after { content: '📷'; position: absolute; background: rgba(0,0,0,0.5); width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+
+    .male { background: #3b82f6; color: white; }
+    .female { background: #ec4899; color: white; }
+
+    .name-tag { font-weight: bold; color: var(--text); margin-top: 10px; font-size: 16px; }
+    .year-tag { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 15px; }
+    .btn { padding: 6px; border: none; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+    .edit-btn { background: #f1f5f9; color: #475569; }
+    .add-btn { background: #10b981; color: white; }
+    .spouse-btn { background: #8b5cf6; color: white; }
+    .del-btn { background: #ef4444; color: white; }
   </style>
 </head>
-<body id="main-body">
+<body>
+
+  <div class="header">
+    <h1>The Daaboul Family Tree</h1>
+  </div>
 
   <div class="toolbar">
-    <button class="tool-btn export-btn" onclick="exportData()">💾 Export</button>
-    <button class="tool-btn import-btn" onclick="document.getElementById('fileInput').click()">📂 Import</button>
+    <button class="tool-btn export-btn" onclick="exportData()">💾 Save Backup</button>
+    <button class="tool-btn export-btn" style="background:#64748b" onclick="document.getElementById('fileInput').click()">📂 Load Backup</button>
     <button class="tool-btn download-btn" onclick="downloadImage()">🖼️ Download Image</button>
-    
-    <select class="theme-select" onchange="changeTheme(this.value)">
-      <option value="default">🎨 Classic Theme</option>
-      <option value="parchment">📜 Parchment</option>
-      <option value="dark">🌙 Dark Mode</option>
-    </select>
-
+    <div class="zoom-info">SCROLL TO ZOOM • DRAG TO MOVE</div>
     <input type="file" id="fileInput" style="display: none" onchange="importData(event)" accept=".json">
     <input type="file" id="photoInput" style="display: none" onchange="handlePhotoUpload(event)" accept="image/*">
   </div>
 
-  <div id="tree-capture-area">
-    <div id="tree-container"></div>
+  <div id="viewport">
+    <div id="tree-container" class="tree"></div>
   </div>
 
   <script>
+    let scale = 0.85;
+    let pointX = 0;
+    let pointY = 0;
+    let start = { x: 0, y: 0 };
+    let isDragging = false;
+
+    const viewport = document.getElementById('viewport');
+    const container = document.getElementById('tree-container');
+
+    // --- ZOOM LOGIC ---
+    viewport.onwheel = function(e) {
+      e.preventDefault();
+      let xs = (e.clientX - pointX) / scale;
+      let ys = (e.clientY - pointY) / scale;
+      let delta = -e.deltaY;
+      (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
+      pointX = e.clientX - xs * scale;
+      pointY = e.clientY - ys * scale;
+      updateTransform();
+    }
+
+    // --- PAN LOGIC ---
+    viewport.onmousedown = function(e) {
+      if(e.target.closest('.btn') || e.target.closest('.node-avatar')) return;
+      isDragging = true;
+      start = { x: e.clientX - pointX, y: e.clientY - pointY };
+    }
+    window.onmousemove = function(e) {
+      if (!isDragging) return;
+      pointX = e.clientX - start.x;
+      pointY = e.clientY - start.y;
+      updateTransform();
+    }
+    window.onmouseup = () => isDragging = false;
+
+    function updateTransform() {
+      container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    }
+
+    // --- DATA LOGIC ---
     let currentPhotoTarget = { id: null, type: 'primary' };
-    let familyData = JSON.parse(localStorage.getItem('familyData_FINAL')) || [
-        { id: 1, name: "Grandparent", birthYear: "1950", gender: "male", parentId: null }
+    let familyData = JSON.parse(localStorage.getItem('familyData_V5')) || [
+        { id: 1, name: "Root Ancestor", birthYear: "1900", gender: "male", parentId: null }
     ];
 
-    function saveTree() {
-      localStorage.setItem('familyData_FINAL', JSON.stringify(familyData));
-      renderTree();
-    }
+    function save() { localStorage.setItem('familyData_V5', JSON.stringify(familyData)); renderTree(); }
 
-    function changeTheme(theme) {
-      document.body.className = ''; 
-      if (theme !== 'default') {
-        document.body.classList.add('theme-' + theme);
-      }
-    }
-
-    async function downloadImage() {
-      const btn = document.querySelector('.download-btn');
-      btn.innerText = "⏳ Processing...";
-      
-      const captureArea = document.getElementById('tree-capture-area');
-      
-      // html2canvas helps take the screenshot
-      html2canvas(captureArea, {
-        backgroundColor: getComputedStyle(document.body).backgroundColor,
-        useCORS: true,
-        scale: 2 // High resolution
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'my-family-tree.png';
-        link.href = canvas.toDataURL();
-        link.click();
-        btn.innerText = "🖼️ Download Image";
-      });
-    }
-
-    function triggerPhoto(id, type) {
-      currentPhotoTarget = { id, type };
-      document.getElementById('photoInput').click();
-    }
-
-    function handlePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    function triggerPhoto(id, type) { currentPhotoTarget = { id, type }; document.getElementById('photoInput').click(); }
+    
+    function handlePhotoUpload(e) {
       const reader = new FileReader();
-      reader.onload = function(e) {
-        const p = familyData.find(person => person.id === currentPhotoTarget.id);
-        if (currentPhotoTarget.type === 'primary') p.photo = e.target.result;
-        else p.spousePhoto = e.target.result;
-        saveTree();
+      reader.onload = (event) => {
+        const p = familyData.find(x => x.id === currentPhotoTarget.id);
+        if (currentPhotoTarget.type === 'primary') p.photo = event.target.result;
+        else p.spousePhoto = event.target.result;
+        save();
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(e.target.files[0]);
     }
 
     function editPerson(id) {
       const p = familyData.find(x => x.id === id);
-      const name = prompt("Name:", p.name);
-      if (name !== null) {
-        p.name = name;
-        p.birthYear = prompt("Birth Year:", p.birthYear) || p.birthYear;
-        p.gender = (prompt("Gender (male/female):", p.gender) || p.gender).toLowerCase();
-        saveTree();
-      }
-    }
-
-    function addChild(pid) {
-      const name = prompt("Enter child's name:");
-      if (!name) return;
-      familyData.push({ id: Date.now(), name, birthYear: "2026", gender: "male", parentId: pid });
-      saveTree();
-    }
-
-    function addSpouse(id) {
-      const p = familyData.find(x => x.id === id);
-      const name = prompt("Spouse Name:");
-      if (name) {
-        p.spouseName = name;
-        p.spouseGender = (prompt("Spouse Gender:", "female") || "female").toLowerCase();
-        saveTree();
-      }
-    }
-
-    function deletePerson(id) {
-      if (confirm("Delete this?")) {
-        familyData = familyData.filter(x => x.id !== id && x.parentId !== id);
-        saveTree();
-      }
-    }
-
-    function exportData() {
-      const dataStr = JSON.stringify(familyData);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = "family-tree.json";
-      link.click();
-    }
-
-    function importData(event) {
-      const reader = new FileReader();
-      reader.onload = (e) => { familyData = JSON.parse(e.target.result); saveTree(); };
-      reader.readAsText(event.target.files[0]);
-    }
-
-    function buildTreeHTML(pid) {
-      const items = familyData.filter(p => p.parentId === pid);
-      if (items.length === 0) return '';
-      let html = '<ul>';
-      items.forEach(child => {
-        const hasSpouse = !!child.spouseName;
-        const pStyle = child.photo ? `background-image: url(${child.photo}); font-size: 0;` : '';
-        const sStyle = child.spousePhoto ? `background-image: url(${child.spousePhoto}); font-size: 0;` : '';
-
-        html += `<li>
-          <div class="tree-node">
-            <div class="avatar-pair">
-              <div class="node-avatar ${child.gender}" style="${pStyle}" onclick="triggerPhoto(${child.id}, 'primary')">
-                ${child.photo ? '' : (child.name ? child.name[0] : '?')}
-              </div>
-              ${hasSpouse ? `
-                <div class="node-avatar ${child.spouseGender}" style="${sStyle}" onclick="triggerPhoto(${child.id}, 'spouse')">
-                  ${child.spousePhoto ? '' : (child.spouseName ? child.spouseName[0] : '?')}
-                </div>` : ''}
-            </div>
-            <div class="node-details">
-              <div class="node-name">${child.name}</div>
-              ${hasSpouse ? `<div class="spouse-text">& ${child.spouseName}</div>` : ''}
-              <div class="node-info">b. ${child.birthYear}</div>
-            </div>
-            <div class="node-actions">
-              <button class="btn edit-btn" onclick="editPerson(${child.id})">Edit</button>
-              <button class="btn add-btn" onclick="addChild(${child.id})">Child</button>
-              <button class="btn spouse-btn" onclick="addSpouse(${child.id})">Spouse</button>
-              <button class="btn del-btn" onclick="deletePerson(${child.id})">Del</button>
-            </div>
-          </div>
-          ${buildTreeHTML(child.id)}
-        </li>`;
-      });
-      return html + '</ul>';
-    }
-
-    function renderTree() {
-      document.getElementById('tree-container').innerHTML = `<div class="tree">${buildTreeHTML(null)}</div>`;
-    }
-    renderTree();
-  </script>
-</body>
-</html>
+      p.name = prompt("Full Name:", p.
