@@ -17,12 +17,11 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg);
       margin: 0;
-      overflow: hidden; /* Important for Pan/Zoom */
+      overflow: hidden;
       height: 100vh;
       width: 100vw;
     }
 
-    /* HEADER */
     .header {
       position: fixed; top: 0; left: 0; right: 0;
       background: #1e293b; color: white;
@@ -31,7 +30,6 @@
     }
     .header h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
 
-    /* TOOLBAR */
     .toolbar {
       position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
       background: white; padding: 10px 20px; border-radius: 50px;
@@ -42,27 +40,15 @@
     .tool-btn { padding: 8px 15px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; transition: 0.2s; }
     .export-btn { background: #3b82f6; color: white; }
     .download-btn { background: #10b981; color: white; }
+    .share-btn { background: #f59e0b; color: white; }
     .zoom-info { font-size: 10px; color: #64748b; font-weight: bold; }
 
-    /* ZOOM & PAN CONTAINER */
-    #viewport {
-      width: 100%; height: 100%;
-      cursor: grab;
-      display: flex; align-items: center; justify-content: center;
-      padding-top: 100px;
-    }
+    #viewport { width: 100%; height: 100%; cursor: grab; display: flex; align-items: center; justify-content: center; padding-top: 100px; }
     #viewport:active { cursor: grabbing; }
+    #tree-container { transform-origin: center center; transition: transform 0.1s ease-out; }
 
-    #tree-container {
-      transform-origin: center center;
-      transition: transform 0.1s ease-out;
-    }
-
-    /* TREE STYLES */
     .tree ul { padding-top: 20px; position: relative; display: flex; justify-content: center; padding-left: 0; }
     .tree li { text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; }
-    
-    /* Connectors */
     .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line); width: 50%; height: 20px; }
     .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line); }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
@@ -72,37 +58,16 @@
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
     .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line); width: 0; height: 20px; }
 
-    /* CARDS */
-    .tree-node {
-      background: var(--card); border: 2px solid #e2e8f0;
-      border-radius: 15px; width: 240px; padding: 15px;
-      display: inline-block; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    }
-
+    .tree-node { background: var(--card); border: 2px solid #e2e8f0; border-radius: 15px; width: 240px; padding: 15px; display: inline-block; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
     .avatar-pair { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; position: relative; }
-    
-    /* Marriage Line */
-    .marriage-line {
-        position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-        width: 40px; height: 2px; background: var(--line); z-index: 1;
-    }
-
-    .node-avatar {
-      width: 65px; height: 65px; border-radius: 50%;
-      border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 22px; cursor: pointer;
-      background-size: cover; background-position: center;
-      position: relative; z-index: 2;
-    }
+    .marriage-line { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 40px; height: 2px; background: var(--line); z-index: 1; }
+    .node-avatar { width: 65px; height: 65px; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 22px; cursor: pointer; background-size: cover; background-position: center; position: relative; z-index: 2; }
     .node-avatar:hover::after { content: '📷'; position: absolute; background: rgba(0,0,0,0.5); width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
 
     .male { background: #3b82f6; color: white; }
     .female { background: #ec4899; color: white; }
-
     .name-tag { font-weight: bold; color: var(--text); margin-top: 10px; font-size: 16px; }
     .year-tag { font-size: 12px; color: #64748b; margin-top: 4px; }
-
     .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 15px; }
     .btn { padding: 6px; border: none; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     .edit-btn { background: #f1f5f9; color: #475569; }
@@ -118,9 +83,10 @@
   </div>
 
   <div class="toolbar">
-    <button class="tool-btn export-btn" onclick="exportData()">💾 Save Backup</button>
-    <button class="tool-btn export-btn" style="background:#64748b" onclick="document.getElementById('fileInput').click()">📂 Load Backup</button>
-    <button class="tool-btn download-btn" onclick="downloadImage()">🖼️ Download Image</button>
+    <button class="tool-btn export-btn" onclick="exportData()">💾 Save</button>
+    <button class="tool-btn export-btn" style="background:#64748b" onclick="document.getElementById('fileInput').click()">📂 Load</button>
+    <button class="tool-btn download-btn" onclick="downloadImage()">🖼️ Image</button>
+    <button class="tool-btn share-btn" onclick="copyTreeLink()">🔗 Copy Link</button>
     <div class="zoom-info">SCROLL TO ZOOM • DRAG TO MOVE</div>
     <input type="file" id="fileInput" style="display: none" onchange="importData(event)" accept=".json">
     <input type="file" id="photoInput" style="display: none" onchange="handlePhotoUpload(event)" accept="image/*">
@@ -131,55 +97,40 @@
   </div>
 
   <script>
-    let scale = 0.85;
-    let pointX = 0;
-    let pointY = 0;
-    let start = { x: 0, y: 0 };
-    let isDragging = false;
+    let scale = 0.85, pointX = 0, pointY = 0, start = { x: 0, y: 0 }, isDragging = false;
+    const viewport = document.getElementById('viewport'), container = document.getElementById('tree-container');
 
-    const viewport = document.getElementById('viewport');
-    const container = document.getElementById('tree-container');
-
-    // --- ZOOM LOGIC ---
     viewport.onwheel = function(e) {
       e.preventDefault();
-      let xs = (e.clientX - pointX) / scale;
-      let ys = (e.clientY - pointY) / scale;
+      let xs = (e.clientX - pointX) / scale, ys = (e.clientY - pointY) / scale;
       let delta = -e.deltaY;
       (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
-      pointX = e.clientX - xs * scale;
-      pointY = e.clientY - ys * scale;
+      pointX = e.clientX - xs * scale; pointY = e.clientY - ys * scale;
       updateTransform();
     }
 
-    // --- PAN LOGIC ---
     viewport.onmousedown = function(e) {
       if(e.target.closest('.btn') || e.target.closest('.node-avatar')) return;
-      isDragging = true;
-      start = { x: e.clientX - pointX, y: e.clientY - pointY };
+      isDragging = true; start = { x: e.clientX - pointX, y: e.clientY - pointY };
     }
-    window.onmousemove = function(e) {
-      if (!isDragging) return;
-      pointX = e.clientX - start.x;
-      pointY = e.clientY - start.y;
-      updateTransform();
-    }
+    window.onmousemove = function(e) { if (!isDragging) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; updateTransform(); }
     window.onmouseup = () => isDragging = false;
+    function updateTransform() { container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
 
-    function updateTransform() {
-      container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    function copyTreeLink() {
+      const el = document.createElement('textarea');
+      el.value = window.location.href;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      alert("Link copied! Now you can paste it in WhatsApp or Email.");
     }
 
-    // --- DATA LOGIC ---
     let currentPhotoTarget = { id: null, type: 'primary' };
-    let familyData = JSON.parse(localStorage.getItem('familyData_V5')) || [
-        { id: 1, name: "Root Ancestor", birthYear: "1900", gender: "male", parentId: null }
-    ];
-
+    let familyData = JSON.parse(localStorage.getItem('familyData_V5')) || [{ id: 1, name: "Grandparent", birthYear: "1950", gender: "male", parentId: null }];
     function save() { localStorage.setItem('familyData_V5', JSON.stringify(familyData)); renderTree(); }
-
     function triggerPhoto(id, type) { currentPhotoTarget = { id, type }; document.getElementById('photoInput').click(); }
-    
     function handlePhotoUpload(e) {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -190,7 +141,50 @@
       };
       reader.readAsDataURL(e.target.files[0]);
     }
-
     function editPerson(id) {
       const p = familyData.find(x => x.id === id);
-      p.name = prompt("Full Name:", p.
+      p.name = prompt("Full Name:", p.name) || p.name;
+      p.birthYear = prompt("Birth Year:", p.birthYear) || p.birthYear;
+      p.gender = (prompt("Gender (male/female):", p.gender) || p.gender).toLowerCase();
+      save();
+    }
+    function addChild(pid) {
+      const name = prompt("Child's Name:");
+      if (name) { familyData.push({ id: Date.now(), name, birthYear: "2026", gender: "male", parentId: pid }); save(); }
+    }
+    function addSpouse(id) {
+      const p = familyData.find(x => x.id === id);
+      p.spouseName = prompt("Spouse Name:") || p.spouseName;
+      p.spouseGender = (prompt("Spouse Gender:", "female") || "female").toLowerCase();
+      save();
+    }
+    function deleteNode(id) {
+      if(confirm("Delete branch?")) {
+        const del = (tid) => { familyData.filter(x => x.parentId === tid).forEach(c => del(c.id)); familyData = familyData.filter(x => x.id !== tid); };
+        del(id); save();
+      }
+    }
+    function exportData() { const blob = new Blob([JSON.stringify(familyData)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "family-tree.json"; a.click(); }
+    function importData(e) { const reader = new FileReader(); reader.onload = (event) => { familyData = JSON.parse(event.target.result); save(); }; reader.readAsText(e.target.files[0]); }
+    function downloadImage() {
+      const btn = document.querySelector('.download-btn'); btn.innerText = "⌛...";
+      html2canvas(document.getElementById('tree-container'), { backgroundColor: "#f1f5f9", scale: 2, useCORS: true }).then(canvas => {
+        const a = document.createElement('a'); a.download = 'family-tree.png'; a.href = canvas.toDataURL(); a.click(); btn.innerText = "🖼️ Image";
+      });
+    }
+    function buildHTML(pid) {
+      const members = familyData.filter(x => x.parentId === pid);
+      if (members.length === 0) return "";
+      let html = "<ul>";
+      members.forEach(m => {
+        const hasSpouse = !!m.spouseName;
+        html += `<li><div class="tree-node"><div class="avatar-pair">
+          <div class="node-avatar ${m.gender}" style="${m.photo ? `background-image:url(${m.photo});font-size:0` : ''}" onclick="triggerPhoto(${m.id}, 'primary')">${m.name ? m.name[0] : '?'}</div>
+          ${hasSpouse ? `<div class="marriage-line"></div><div class="node-avatar ${m.spouseGender}" style="${m.spousePhoto ? `background-image:url(${m.spousePhoto});font-size:0` : ''}" onclick="triggerPhoto(${m.id}, 'spouse')">${m.spouseName ? m.spouseName[0] : '?'}</div>` : ''}
+          </div><div class="name-tag">${m.name} ${hasSpouse ? '& ' + m.spouseName : ''}</div><div class="year-tag">b. ${m.birthYear}</div>
+          <div class="node-actions"><button class="btn edit-btn" onclick="editPerson(${m.id})">Edit</button><button class="btn add-btn" onclick="addChild(${m.id})">Child</button><button class="btn spouse-btn" onclick="addSpouse(${m.id})">Spouse</button><button class="btn del-btn" onclick="deleteNode(${m.id})">Del</button></div></div>
+          ${buildHTML(m.id)}</li>`;
+      });
+      return html + "</ul>";
+    }
+    function renderTree() {
