@@ -36,14 +36,15 @@
 
     #viewport { width: 100vw; height: 100vh; cursor: grab; position: absolute; top: 0; left: 0; z-index: 100; overflow: hidden; }
     
-    /* THE FIX: width: max-content stops the browser from squishing asymmetrical trees */
     #tree-container { 
       position: absolute; left: 0; top: 0; transform-origin: 0 0; 
-      width: max-content; min-width: 100vw; padding-bottom: 100px;
+      width: max-content; padding-bottom: 100px;
     }
 
     .tree ul { display: flex; justify-content: center; padding: 40px 0; position: relative; list-style: none; margin: 0; }
-    .tree li { position: relative; padding: 40px 15px 0; }
+    
+    /* THE FIX: flex-shrink: 0 prevents the tablet from breaking the lines and math */
+    .tree li { position: relative; padding: 40px 15px 0; flex-shrink: 0; }
     
     .tree li::before, .tree li::after { 
       content: ''; position: absolute; top: 0; right: 50%; 
@@ -191,33 +192,31 @@
       document.getElementById('tree-container').innerHTML = build(roots);
 
       if(isFirstLoad) {
-        // Fire 3 times to guarantee it centers even if photos take a second to load
         setTimeout(centerOnRoot, 100); 
         setTimeout(centerOnRoot, 800);
-        setTimeout(centerOnRoot, 1500);
         isFirstLoad = false;
       }
     }
 
-    // PERFECT CENTERING LOGIC
+    // FLAWLESS CENTERING MATH
     function centerOnRoot() {
       const ct = document.getElementById('tree-container');
-      const rootNode = document.querySelector('.tree-node'); // Selects the highest ancestor box
+      const rootNode = document.querySelector('.tree-node'); 
       
       if(rootNode && ct) {
-        // Step 1: Briefly clear the transform to get an exact mathematical measurement
-        ct.style.transform = `translate(0px, 0px) scale(1)`;
-        void ct.offsetWidth; // Force browser to calculate sizing immediately
+        // Remove transform completely to get a pure, uncorrupted measurement
+        ct.style.transform = 'none'; 
+        void ct.offsetWidth; 
         
-        // Step 2: Measure exactly where the box is
+        // Measure where the root box actually is on the page
         const rect = rootNode.getBoundingClientRect();
         const rootCenterX = rect.left + (rect.width / 2);
         const screenCenterX = window.innerWidth / 2;
         
-        // Step 3: Shift the coordinates to center it, then apply
+        // Apply the exact difference to center it flawlessly
         s = 1; 
         x = screenCenterX - rootCenterX; 
-        y = 150; // Distance from the top menu
+        y = 150; 
         apply();
       }
     }
@@ -269,7 +268,6 @@
       s *= amt; apply();
     }
     
-    // The Home button is now an instant manual centering tool
     function resetView() { centerOnRoot(); }
     function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
 
