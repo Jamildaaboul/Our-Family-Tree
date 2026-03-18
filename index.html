@@ -7,133 +7,129 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
-    /* 1. DEFINE VINTAGE PALETTE & TEXTURES */
     :root { 
-      --brass: #bf9b30; 
-      --leather: #a0522d; 
-      --paper: #fdf5e6; 
-      --wood-dark: #3e2723; 
-      --male-ink: #1e88e5; /* Distinct but subtle inked J initial */
-      --female-ink: #d81b60; /* Distinct but subtle inked N initial */
-      --engraved-dark: #333;
+      --brass-light: #fceabb; 
+      --brass-dark: #f8b500;
+      --pipe: #d4af37;
+      --wood-dark: #2d1a11; 
+      --engraved: #3e2723;
+      --male-ink: #1e88e5; 
+      --female-ink: #d81b60; 
     }
     
     html, body { 
-      font-family: 'Segoe UI', serif; /* A clean font for labels, calligraphic for titles */
-      /* NEW BACKGROUND: Intricate carved walnut panel */
+      font-family: 'Segoe UI', serif; 
       background: var(--wood-dark) url('https://www.transparenttextures.com/patterns/dark-wood-50.png');
       margin: 0; padding: 0; overflow: hidden; 
       height: 100%; width: 100%; touch-action: none; 
     }
     
-    /* 2. SOPHISTICATED TOP NAVIGATION */
     .interface-layer { 
       position: fixed; top: 0; left: 0; right: 0; z-index: 999999; 
-      /* Walnut panel overlay */
-      background: rgba(62, 39, 35, 0.98) url('https://www.transparenttextures.com/patterns/dark-wood-50.png');
-      padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; 
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6); pointer-events: auto;
+      background: rgba(45, 26, 17, 0.95); padding: 15px; 
+      display: flex; flex-direction: column; align-items: center; gap: 10px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8); pointer-events: auto;
+      border-bottom: 2px solid var(--pipe);
     }
     .header-title { 
-      color: #d7ccc8; margin: 0; 
+      color: var(--brass-light); margin: 0; 
       font-family: "Lucida Calligraphy", cursive, serif; font-size: 26px;
-      /* Decorative brass nameplate effect */
-      padding: 5px 15px; border: 2px solid var(--brass); border-radius: 5px;
-      background: rgba(62, 39, 35, 0.5);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
 
     .controls-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
     .search-input { 
-      padding: 10px 15px; border-radius: 25px; border: 2px solid var(--leather); 
-      width: 180px; outline: none; font-size: 14px; color: var(--engraved-dark);
-      background: var(--paper); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+      padding: 10px 15px; border-radius: 5px; border: 2px solid var(--engraved); 
+      width: 180px; outline: none; font-size: 14px; color: var(--engraved);
+      background: #fff; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    /* 3. VIEWPORT & ANTI-CRUSH TREE */
     #viewport { width: 100vw; height: 100vh; cursor: grab; position: absolute; top: 0; left: 0; z-index: 100; overflow: hidden; }
+    
     #tree-container { 
       position: absolute; left: 0; top: 0; transform-origin: 0 0; 
-      width: max-content; min-width: 100vw; padding: 120px 20px 100px 20px; 
-      display: flex; justify-content: center; /* Symmetrical fanning logic */
+      width: max-content; min-width: 100vw; padding: 130px 40px 100px 40px; 
+      display: flex; justify-content: center; 
     }
 
-    /* 4. SOPHISTICATED BRASS CONNECTOR MATH */
+    /* BRASS PIPE CONNECTORS */
     .tree ul { display: flex; justify-content: center; flex-wrap: nowrap; padding: 40px 0 0 0; position: relative; list-style: none; margin: 0; }
     .tree li { position: relative; padding: 40px 15px 0; flex: 0 0 auto; text-align: center; }
     
     .tree li::before, .tree li::after { 
       content: ''; position: absolute; top: 0; right: 50%; 
-      /* Delicated etched brass chains and branches */
-      border-top: 3px solid var(--brass); width: 50%; height: 40px; border-radius: 10px 0 0 0;
-      box-shadow: 0 1px 1px rgba(0,0,0,0.3);
+      border-top: 5px solid var(--pipe); width: 50%; height: 40px; border-radius: 0;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.6);
     }
     .tree li::after { 
-      right: auto; left: 50%; border-left: 3px solid var(--brass); border-radius: 0 10px 0 0;
-      margin-left: -1.5px; /* Perfect pixel connection */
+      right: auto; left: 50%; border-left: 5px solid var(--pipe); 
+      margin-left: -2.5px; 
     }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
     .tree li:only-child { padding-top: 0; }
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-    .tree li:last-child::before { border-right: 3px solid var(--brass); border-radius: 0 10px 0 0; margin-right: -1.5px; }
-    .tree li:first-child::after { border-radius: 10px 0 0 0; }
+    .tree li:last-child::before { border-right: 5px solid var(--pipe); margin-right: -2.5px; }
     
     .tree ul ul::before { 
       content: ''; position: absolute; top: 0; left: 50%; 
-      border-left: 3px solid var(--brass); width: 0; height: 40px; 
-      margin-left: -1.5px; /* Perfect pixel connection */
+      border-left: 5px solid var(--pipe); width: 0; height: 40px; 
+      margin-left: -2.5px; box-shadow: 3px 0 5px rgba(0,0,0,0.6);
     }
 
-    /* 5. VINTAGE PARCHMENT NODES IN BRASS FRAMES */
+    /* BRASS PLAQUE DESIGN (Matching Reference Image) */
     .tree-node { 
-      /* Hand-lettered parchment on walnut disc */
-      background: var(--paper); 
-      background-image: url('https://www.transparenttextures.com/patterns/p6.png');
-      border: 4px solid var(--brass); border-radius: 15px; 
-      width: 260px; padding: 15px; display: inline-block; 
-      box-shadow: 8px 8px 0px rgba(0,0,0,0.4); position: relative;
+      background: linear-gradient(135deg, var(--brass-light), var(--brass-dark));
+      border: 3px solid #8c6200; 
+      border-radius: 6px; 
+      width: 320px; /* Wider to fit horizontal layout */
+      padding: 12px; display: flex; align-items: center; gap: 15px;
+      box-shadow: 6px 6px 15px rgba(0,0,0,0.8), inset 0 0 8px rgba(255,255,255,0.4); 
+      position: relative;
     }
-    /* Symmetrical layout for Root Card */
-    .tree-node::before { 
-      content: ''; position: absolute; top: -15px; left: calc(50% - 12px); 
-      font-size: 24px; color: var(--leaf); display: none; /* Decorative clasp removed, can be custom */
-    }
+    
+    /* Hardware Screws on the plaque */
+    .screw { position: absolute; width: 8px; height: 8px; background: #555; border-radius: 50%; box-shadow: inset 1px 1px 2px #222, 1px 1px 1px rgba(255,255,255,0.5); }
+    .screw::after { content: ''; position: absolute; top: 3px; left: 1px; width: 6px; height: 1.5px; background: #222; transform: rotate(45deg); }
+    .s-tl { top: 6px; left: 6px; } .s-tr { top: 6px; right: 6px; }
+    .s-bl { bottom: 6px; left: 6px; } .s-br { bottom: 6px; right: 6px; }
 
-    /* AVATARS as framed circular portraits */
-    .avatar-pair { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; }
+    /* HORIZONTAL CONTENT LAYOUT */
+    .avatar-pair { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+    
     .node-avatar { 
-      width: 65px; height: 65px; border-radius: 50%; border: 4px solid var(--engraved-dark); 
+      width: 60px; height: 60px; 
+      border-radius: 6px; /* Square framed photos like the reference */
+      border: 3px solid var(--engraved); 
       background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center;
-      /* ENGRAVED CAMEO AESTHETIC for initials */
       font-family: "Lucida Calligraphy", cursive, serif; font-size: 28px; font-weight: 900;
       cursor: pointer; position: relative; 
-      color: #fff; text-shadow: 0 1px 1px #000;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+      color: #fff; text-shadow: 0 1px 2px #000;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
     }
-    .node-avatar::after { content: '📸'; position: absolute; bottom: -5px; right: -5px; font-size: 14px; background: #fff; color: var(--engraved-dark); border-radius: 50%; padding: 2px; border: 1px solid var(--brass); }
+    .node-avatar::after { content: '📸'; position: absolute; bottom: -8px; right: -8px; font-size: 12px; background: #fff; color: var(--engraved); border-radius: 50%; padding: 3px; border: 1px solid var(--engraved); box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
     
-    /* Inked style for single-letter portraits */
-    .male { background-color: var(--male-ink); color: #fff; } 
-    .female { background-color: var(--female-ink); color: #fff; }
+    .male { background-color: var(--male-ink); } 
+    .female { background-color: var(--female-ink); }
     
-    .name-tag { font-family: "Lucida Calligraphy", cursive, serif; font-weight: bold; font-size: 16px; color: var(--wood-dark); margin: 5px 0; }
-    .dob-tag { font-family: "Lucida Calligraphy", cursive, serif; font-size: 13px; color: var(--leaf); font-weight: bold; margin-bottom: 10px; }
+    .node-info { flex-grow: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+    
+    .name-tag { font-family: "Lucida Calligraphy", cursive, serif; font-weight: bold; font-size: 16px; color: var(--engraved); margin: 0 0 5px 0; line-height: 1.2; text-shadow: 1px 1px 0px rgba(255,255,255,0.4); }
+    .dob-tag { font-family: 'Segoe UI', serif; font-size: 13px; color: #5c4033; font-weight: bold; margin-bottom: 8px; }
 
-    /* 6. CALLIGRAPHIC LEATHER ACTION TABS */
+    /* ACTION BUTTONS inside the plaque */
+    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; }
     .btn { 
-      padding: 8px; border: none; border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; 
-      background: var(--leather); color: #fff; 
-      border-bottom: 2px solid var(--wood-dark);
-      font-family: "Segoe UI", serif; text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+      padding: 6px; border: 1px solid rgba(0,0,0,0.3); border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; 
+      background: var(--engraved); color: #fff; 
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     }
-    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .btn:active { transform: scale(0.95); }
     
-    /* SOPHISTICATED ZOOM BUTTONS */
-    .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--leather); background: var(--brass); color: #fff; font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
-    .zoom-btn:active { transform: scale(0.9); background: #b08e24; }
+    .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--brass-light); background: var(--pipe); color: var(--engraved); font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 3px 8px rgba(0,0,0,0.6); }
+    .zoom-btn:active { transform: scale(0.9); background: var(--brass-dark); }
     
-    .highlighted { background: #fff9c4 !important; border-color: #fbc02d !important; }
+    .highlighted { box-shadow: 0 0 20px #fff, inset 0 0 15px #fff !important; }
 
-    /* PRINT logic is already set for perfect clean output */
     @media print {
       #top-nav { display: none !important; }
       body { background: white !important; }
@@ -151,9 +147,9 @@
       
       <input type="text" class="search-input" id="searchBox" placeholder="Search Ancestors..." oninput="runSearch()">
       
-      <button class="btn" style="background:var(--leaf); color:white;" onclick="resetView()">🏠 Home</button>
-      <button class="btn" style="background:var(--engraved-dark); color:white;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
-      <button class="btn" style="background:var(--male-ink); color:white;" onclick="window.print()">🖨️ Save PDF</button>
+      <button class="btn" style="background:#2e7d32; color:white; padding: 10px;" onclick="resetView()">🏠 Home</button>
+      <button class="btn" style="background:var(--engraved); color:white; padding: 10px;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
+      <button class="btn" style="background:var(--male-ink); color:white; padding: 10px;" onclick="window.print()">🖨️ Save PDF</button>
       
       <input type="file" id="fileIn" style="display:none" onchange="importData(event)">
       <input type="file" id="imagePicker" style="display:none" accept="image/*">
@@ -199,7 +195,7 @@
 
     function render() {
       if (!familyData || familyData.length === 0) {
-        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--paper); margin-top: 150px;'>Tree is empty. Click LOAD.</h3>";
+        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--brass-light); margin-top: 150px; font-family: \"Lucida Calligraphy\", cursive;'>Tree is empty. Click LOAD.</h3>";
         return;
       }
 
@@ -219,20 +215,29 @@
           const l2 = (hasS && m.spouseName && m.spouseName.length > 0) ? m.spouseName[0].toUpperCase() : '?';
           const children = familyData.filter(x => x.parentId == m.id);
 
-          h += `<li><div class="tree-node" id="node-${m.id}">
-            <div class="avatar-pair">
-              <div class="node-avatar ${m.gender}" ${p1} onclick="pickNewFile(${m.id}, false)">${m.photo ? '' : l1}</div>
-              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="pickNewFile(${m.id}, true)">${m.spousePhoto ? '' : l2}</div>` : ''}
+          h += `<li>
+            <div class="tree-node" id="node-${m.id}">
+              <div class="screw s-tl"></div><div class="screw s-tr"></div>
+              <div class="screw s-bl"></div><div class="screw s-br"></div>
+              
+              <div class="avatar-pair">
+                <div class="node-avatar ${m.gender}" ${p1} onclick="pickNewFile(${m.id}, false)">${m.photo ? '' : l1}</div>
+                ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="pickNewFile(${m.id}, true)">${m.spousePhoto ? '' : l2}</div>` : ''}
+              </div>
+              
+              <div class="node-info">
+                <span class="name-tag">${m.name || 'Unknown'}${hasS ? '<br>& ' + m.spouseName : ''}</span>
+                <span class="dob-tag">${m.dob || ''}</span>
+                <div class="node-actions">
+                  <button class="btn" style="background:#5d4037;" onclick="editP(${m.id})">Edit</button>
+                  <button class="btn" style="background:#2e7d32;" onclick="addC(${m.id})">+Child</button>
+                  <button class="btn" style="background:#8d6e63;" onclick="addS(${m.id})">+Spouse</button>
+                  <button class="btn" style="background:#c62828;" onclick="delP(${m.id})">Del</button>
+                </div>
+              </div>
             </div>
-            <span class="name-tag">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</span>
-            <span class="dob-tag">${m.dob || ''}</span>
-            <div class="node-actions">
-              <button class="btn" onclick="editP(${m.id})">Edit</button>
-              <button class="btn" style="background:var(--male-ink);color:white" onclick="addC(${m.id})">+Child</button>
-              <button class="btn" style="background:var(--female-ink);color:white" onclick="addS(${m.id})">+Spouse</button>
-              <button class="btn" style="background:#d32f2f;color:white" onclick="delP(${m.id})">Del</button>
-            </div>
-          </div>${build(children)}</li>`;
+            ${build(children)}
+          </li>`;
         });
         return h + "</ul>";
       };
