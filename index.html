@@ -38,9 +38,11 @@
     .search-input { padding: 10px 15px; border-radius: 25px; border: 2px solid #8d6e63; width: 200px; outline: none; }
 
     #viewport { width: 100vw; height: 100vh; cursor: grab; position: relative; overflow: hidden; z-index: 100; touch-action: none; }
-    #tree-container { position: absolute; left: 50%; top: 0; padding-top: 220px; transform-origin: top center; transform: translate(-50%, 0) scale(1); }
+    
+    /* Simplified container to allow the Smart Camera to work perfectly */
+    #tree-container { position: absolute; left: 0; top: 0; width: 100vw; display: flex; justify-content: center; padding-top: 220px; transform-origin: top center; }
 
-    .tree ul { display: flex; justify-content: center; padding: 40px 0; position: relative; list-style: none; }
+    .tree ul { display: flex; justify-content: center; padding: 40px 0; position: relative; list-style: none; margin: 0; }
     .tree li { position: relative; padding: 40px 15px 0; }
     
     .tree li::before, .tree li::after { 
@@ -130,6 +132,7 @@
     const db = firebase.database().ref('familyTree');
     let familyData = [];
     let activeTarget = null;
+    let isFirstLoad = true; // Helps the Smart Camera
 
     db.on('value', snap => {
       const data = snap.val();
@@ -150,18 +153,28 @@
     }
 
     function render() {
-      const build = (pid) => {
-        const items = familyData.filter(x => x.parentId == pid);
-        if(!items.length) return "";
+      if (!familyData || familyData.length === 0) {
+        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--wood)'>Tree is empty. Click LOAD.</h3>";
+        return;
+      }
+
+      // SMART ROOT FINDER: Finds the true ancestors ignoring broken links
+      const allIds = new Set(familyData.map(x => x.id));
+      let roots = familyData.filter(x => !x.parentId || !allIds.has(x.parentId));
+      if (roots.length === 0) roots = [familyData[0]]; // Ultimate fallback
+
+      const build = (nodes) => {
+        if(!nodes || nodes.length === 0) return "";
         let h = "<ul>";
-        items.forEach(m => {
+        nodes.forEach(m => {
           const hasS = !!m.spouseName;
           const p1 = m.photo ? `style="background-image:url('${m.photo}')"` : '';
           const p2 = m.spousePhoto ? `style="background-image:url('${m.spousePhoto}')"` : '';
           
-          // Safety logic for letters
           const l1 = (m.name && m.name.length > 0) ? m.name[0].toUpperCase() : '?';
-          const l2 = (hasS && m.spouseName.length > 0) ? m.spouseName[0].toUpperCase() : '?';
+          const l2 = (hasS && m.spouseName && m.spouseName.length > 0) ? m.spouseName[0].toUpperCase() : '?';
+
+          const children = familyData.filter(x => x.parentId == m.id);
 
           h += `<li><div class="tree-node" id="node-${m.id}">
             <div class="avatar-pair">
@@ -176,20 +189,30 @@
               <button class="btn" style="background:#8d6e63;color:white" onclick="addS(${m.id})">+Spouse</button>
               <button class="btn" style="background:#d32f2f;color:white" onclick="delP(${m.id})">Del</button>
             </div>
-          </div>${build(m.id)}</li>`;
+          </div>${build(children)}</li>`;
         });
         return h + "</ul>";
       };
 
-      // SAFETY NET: Try to build normally, but if it fails, force the first person to be the Root
-      let htmlContent = build(null) || build(undefined) || build("");
-      if (!htmlContent && familyData.length > 0) {
-        familyData[0].parentId = null; 
-        htmlContent = build(null);
-        save(); // Save the fix to the cloud
-      }
+      document.getElementById('tree-container').innerHTML = build(roots);
 
-      document.getElementById('tree-container').innerHTML = htmlContent || "<h3 style='color:var(--wood)'>Tree is empty. Click LOAD.</h3>";
+      // Trigger Smart Camera
+      if(isFirstLoad) {
+        setTimeout(centerOnRoot, 100);
+        isFirstLoad = false;
+      }
+    }
+
+    // SMART CAMERA: Locks onto the top box
+    function centerOnRoot() {
+      const rootNode = document.querySelector('.tree > ul > li > .tree-node');
+      if(rootNode) {
+        const box = rootNode.getBoundingClientRect();
+        const screenCenter = window.innerWidth / 2;
+        const boxCenter = box.left + (box.width / 2);
+        x += (screenCenter - boxCenter); // Shift screen to perfectly align
+        apply();
+      }
     }
 
     function pickNewFile(id, isSpouse) {
@@ -233,8 +256,8 @@
     let s = 1, x = 0, y = 0, startX = 0, startY = 0, isDown = false;
     const ct = document.getElementById('tree-container');
     function zoom(amt) { s *= amt; apply(); }
-    function resetView() { s = 1; x = 0; y = 0; apply(); }
-    function apply() { ct.style.transform = `translate(calc(-50% + ${x}px), ${y}px) scale(${s})`; }
+    function resetView() { s = 1; x = 0; y = 0; centerOnRoot(); apply(); }
+    function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
 
     window.onmousedown = e => { if(e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.node-avatar')) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
     window.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; apply(); };
@@ -244,7 +267,7 @@
 
     function importData(e) {
       const r = new FileReader();
-      r.onload = ev => { familyData = JSON.parse(ev.target.result); render(); save(); };
+      r.onload = ev => { familyData = JSON.parse(ev.target.result); isFirstLoad = true; render(); save(); };
       r.readAsText(e.target.files[0]);
     }
   </script>
