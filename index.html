@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Daaboul Family Tree</title>
+  <title>Daaboul Family Tree - Final</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
@@ -28,15 +28,15 @@
     .highlighted { background: var(--highlight) !important; border-color: #eab308 !important; box-shadow: 0 0 25px #facc15; transform: scale(1.05); }
 
     .avatar-pair { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; }
-    .node-avatar { width: 65px; height: 65px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; background-color: #cbd5e1; cursor: pointer; }
-    .male { background-color: var(--male); } .female { background-color: var(--female); }
+    .node-avatar { width: 65px; height: 65px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; background-color: #cbd5e1; cursor: pointer; position: relative; }
+    .node-avatar::after { content: '📸'; position: absolute; bottom: 0; right: 0; font-size: 12px; background: white; border-radius: 50%; padding: 2px; }
     
+    .male { background-color: var(--male); } .female { background-color: var(--female); }
     .name-tag { font-weight: bold; font-size: 15px; display: block; margin: 5px 0; }
     .dob-tag { font-size: 13px; color: #475569; display: block; margin-bottom: 10px; font-weight: 600; }
 
     .btn { padding: 10px 8px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; background: #e2e8f0; }
     .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-
     .zoom-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #3b82f6; background: white; font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
@@ -51,13 +51,12 @@
       <button class="btn" style="background:#3b82f6; color:white;" onclick="resetView()">🏠 Home</button>
       <button class="btn" style="background:#475569; color:white;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
       <input type="file" id="fileIn" style="display:none" onchange="importData(event)">
-      <input type="file" id="photoHelper" style="display:none" accept="image/*">
+      
+      <input type="file" id="imagePicker" style="display:none" accept="image/*">
     </div>
   </div>
 
-  <div id="viewport">
-    <div id="tree-container" class="tree"></div>
-  </div>
+  <div id="viewport"><div id="tree-container" class="tree"></div></div>
 
   <script>
     const firebaseConfig = {
@@ -74,7 +73,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('familyTree');
     let familyData = [];
-    let currentPhotoTarget = null;
+    let activeTarget = null;
 
     db.on('value', snap => {
       const data = snap.val();
@@ -106,11 +105,11 @@
 
           h += `<li><div class="tree-node" id="node-${m.id}">
             <div class="avatar-pair">
-              <div class="node-avatar ${m.gender}" ${p1} onclick="triggerPhotoUpload(${m.id}, false)">${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
-              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="triggerPhotoUpload(${m.id}, true)">${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
+              <div class="node-avatar ${m.gender}" ${p1} onclick="pickNewFile(${m.id}, false)">${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
+              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="pickNewFile(${m.id}, true)">${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
             </div>
             <span class="name-tag">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</span>
-            <span class="dob-tag">${m.dob || ''} ${hasS && m.spouseDOB ? '| ' + m.spouseDOB : ''}</span>
+            <span class="dob-tag">${m.dob || ''}</span>
             <div class="node-actions">
               <button class="btn" onclick="editP(${m.id})">Edit</button>
               <button class="btn" style="background:#3b82f6;color:white" onclick="addC(${m.id})">+Child</button>
@@ -124,22 +123,23 @@
       document.getElementById('tree-container').innerHTML = build(null) || build(undefined);
     }
 
-    // PHOTO UPLOAD LOGIC
-    function triggerPhotoUpload(id, isSpouse) {
-      currentPhotoTarget = { id, isSpouse };
-      document.getElementById('photoHelper').click();
+    // NEW LOGIC: OPEN GALLERY INSTEAD OF PROMPT
+    function pickNewFile(id, isSpouse) {
+      activeTarget = { id, isSpouse };
+      document.getElementById('imagePicker').click();
     }
 
-    document.getElementById('photoHelper').onchange = function(e) {
+    document.getElementById('imagePicker').onchange = function(e) {
       const file = e.target.files[0];
       if (!file) return;
       
       const reader = new FileReader();
       reader.onload = function(event) {
-        const p = familyData.find(x => x.id == currentPhotoTarget.id);
-        if(currentPhotoTarget.isSpouse) p.spousePhoto = event.target.result;
-        else p.photo = event.target.result;
+        const person = familyData.find(x => x.id == activeTarget.id);
+        if(activeTarget.isSpouse) person.spousePhoto = event.target.result;
+        else person.photo = event.target.result;
         save();
+        alert("Photo Uploaded!");
       };
       reader.readAsDataURL(file);
     };
