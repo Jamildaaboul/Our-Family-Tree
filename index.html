@@ -10,38 +10,34 @@
     :root { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --male: #2563eb; --female: #db2777; --line: #64748b; --highlight: #fef08a; }
     body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; width: 100vw; touch-action: none; }
     
-    /* THE INTERFACE BOX */
     .interface-layer { position: fixed; top: 0; left: 0; right: 0; z-index: 10000; background: #0f172a; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); pointer-events: auto; }
     .header-title { color: white; margin: 0; font-family: "Lucida Calligraphy", cursive, serif; font-size: 22px; }
 
     .controls-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
-    
-    /* SEARCH BOX FIX */
-    .search-input { padding: 12px 15px; border-radius: 25px; border: 3px solid #3b82f6; width: 220px; font-size: 16px; outline: none; background: white; pointer-events: auto; -webkit-user-select: text; user-select: text; }
+    .search-input { padding: 12px 15px; border-radius: 25px; border: 3px solid #3b82f6; width: 220px; font-size: 16px; outline: none; background: white; pointer-events: auto; }
 
     #viewport { width: 100vw; height: 100vh; cursor: grab; display: flex; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; z-index: 100; }
     #tree-container { transform-origin: center center; padding-top: 250px; }
 
-    /* TREE STYLING */
     .tree ul { display: flex; justify-content: center; padding: 20px 0; position: relative; list-style: none; }
     .tree li { position: relative; padding: 20px 10px 0; }
     .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 3px solid var(--line); width: 50%; height: 20px; }
     .tree li::after { right: auto; left: 50%; border-left: 3px solid var(--line); }
     
-    .tree-node { background: var(--card); border: 2px solid #cbd5e1; border-radius: 20px; width: 250px; padding: 15px; display: inline-block; transition: background 0.3s; }
+    .tree-node { background: var(--card); border: 2px solid #cbd5e1; border-radius: 20px; width: 250px; padding: 15px; display: inline-block; }
     .highlighted { background: var(--highlight) !important; border-color: #eab308 !important; box-shadow: 0 0 25px #facc15; transform: scale(1.05); }
 
     .avatar-pair { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; }
-    .node-avatar { width: 60px; height: 60px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; background-color: #cbd5e1; }
+    .node-avatar { width: 65px; height: 65px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; background-color: #cbd5e1; cursor: pointer; }
     .male { background-color: var(--male); } .female { background-color: var(--female); }
     
     .name-tag { font-weight: bold; font-size: 15px; display: block; margin: 5px 0; }
     .dob-tag { font-size: 13px; color: #475569; display: block; margin-bottom: 10px; font-weight: 600; }
 
-    .btn { padding: 10px 8px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; background: #e2e8f0; pointer-events: auto; }
+    .btn { padding: 10px 8px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; background: #e2e8f0; }
     .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 
-    .zoom-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #3b82f6; background: white; font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+    .zoom-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #3b82f6; background: white; font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   </style>
 </head>
 <body>
@@ -55,6 +51,7 @@
       <button class="btn" style="background:#3b82f6; color:white;" onclick="resetView()">🏠 Home</button>
       <button class="btn" style="background:#475569; color:white;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
       <input type="file" id="fileIn" style="display:none" onchange="importData(event)">
+      <input type="file" id="photoHelper" style="display:none" accept="image/*">
     </div>
   </div>
 
@@ -77,6 +74,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('familyTree');
     let familyData = [];
+    let currentPhotoTarget = null;
 
     db.on('value', snap => {
       const data = snap.val();
@@ -108,8 +106,8 @@
 
           h += `<li><div class="tree-node" id="node-${m.id}">
             <div class="avatar-pair">
-              <div class="node-avatar ${m.gender}" ${p1} onclick="addPhoto(${m.id}, false)">${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
-              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="addPhoto(${m.id}, true)">${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
+              <div class="node-avatar ${m.gender}" ${p1} onclick="triggerPhotoUpload(${m.id}, false)">${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
+              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="triggerPhotoUpload(${m.id}, true)">${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
             </div>
             <span class="name-tag">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</span>
             <span class="dob-tag">${m.dob || ''} ${hasS && m.spouseDOB ? '| ' + m.spouseDOB : ''}</span>
@@ -126,16 +124,25 @@
       document.getElementById('tree-container').innerHTML = build(null) || build(undefined);
     }
 
-    // PHOTO UPDATE FIX
-    function addPhoto(id, isSpouse) {
-      const p = familyData.find(x => x.id == id);
-      const url = prompt("Paste the Image Link (URL) here:");
-      if(url) {
-        if(isSpouse) p.spousePhoto = url;
-        else p.photo = url;
-        save();
-      }
+    // PHOTO UPLOAD LOGIC
+    function triggerPhotoUpload(id, isSpouse) {
+      currentPhotoTarget = { id, isSpouse };
+      document.getElementById('photoHelper').click();
     }
+
+    document.getElementById('photoHelper').onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const p = familyData.find(x => x.id == currentPhotoTarget.id);
+        if(currentPhotoTarget.isSpouse) p.spousePhoto = event.target.result;
+        else p.photo = event.target.result;
+        save();
+      };
+      reader.readAsDataURL(file);
+    };
 
     function editP(id) {
       const p = familyData.find(x => x.id == id);
@@ -157,7 +164,6 @@
       if(confirm("Delete?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
     }
 
-    // ZOOM & PAN
     let s = 1, x = 0, y = 0, startX = 0, startY = 0, isDown = false;
     const ct = document.getElementById('tree-container');
     function zoom(amt) { s *= amt; apply(); }
