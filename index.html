@@ -2,39 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The Daaboul Family Tree Pro</title>
+  <title>Daaboul Family Cloud Tree</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     :root { --bg: #cbd5e1; --card: #fefce8; --text: #0f172a; --line: #334155; --male: #1d4ed8; --female: #be185d; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; overflow: hidden; height: 100vh; width: 100vw; touch-action: none; }
+    body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; overflow: hidden; height: 100vh; }
     .header { position: fixed; top: 0; left: 0; right: 0; background: #1e293b; color: white; padding: 15px; text-align: center; z-index: 2000; height: 50px; }
     .header h1 { margin: 0; font-family: "Lucida Calligraphy", cursive; font-size: 28px; }
-    .toolbar { position: fixed; top: 95px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 25px; border-radius: 50px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; gap: 10px; z-index: 1000; border: 2px solid #3b82f6; align-items: center; }
+    .toolbar { position: fixed; top: 95px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 25px; border-radius: 50px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); display: flex; gap: 10px; z-index: 1000; border: 2px solid #3b82f6; }
     .tool-btn { padding: 10px 15px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
     #viewport { width: 100%; height: 100%; cursor: grab; display: flex; align-items: center; justify-content: center; }
-    #tree-container { transform-origin: center center; transition: transform 0.1s ease-out; padding-top: 100px; }
+    #tree-container { transform-origin: center center; transition: transform 0.1s; padding-top: 100px; }
     .tree ul { display: flex; justify-content: center; padding: 30px 0 0 0; position: relative; }
     .tree li { text-align: center; list-style-type: none; position: relative; padding: 30px 20px 0 20px; }
     .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 4px solid var(--line); width: 50%; height: 30px; }
     .tree li::after { right: auto; left: 50%; border-left: 4px solid var(--line); }
-    .tree-node { background: var(--card); border: 3px solid #94a3b8; border-radius: 24px; width: 280px; padding: 25px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
-    .avatar-pair { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; position: relative; }
-    .marriage-line { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 45px; height: 4px; background: var(--line); z-index: 1; }
-    .node-avatar { width: 85px; height: 85px; border-radius: 50%; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 30px; cursor: pointer; background-size: cover; background-position: center; position: relative; z-index: 2; overflow: hidden; }
-    .male { background-color: var(--male); color: white; }
-    .female { background-color: var(--female); color: white; }
-    .name-tag { font-weight: 900; color: var(--text); font-size: 20px; margin-top: 12px; }
-    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
-    .btn { padding: 10px 5px; border: none; border-radius: 8px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+    .tree-node { background: var(--card); border: 3px solid #94a3b8; border-radius: 24px; width: 260px; padding: 20px; display: inline-block; }
+    .node-avatar { width: 70px; height: 70px; border-radius: 50%; border: 4px solid white; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; color: white; font-weight: bold; }
+    .male { background-color: var(--male); } .female { background-color: var(--female); }
+    .name-tag { font-weight: 900; font-size: 18px; color: var(--text); }
+    .btn { padding: 8px; border-radius: 5px; border: none; font-size: 9px; cursor: pointer; margin-top: 10px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="header"><h1>The Daaboul Family Tree</h1></div>
   <div class="toolbar">
     <button class="tool-btn" onclick="resetView()">🏠 Home</button>
-    <button class="tool-btn" style="background:#334155;color:white" onclick="zoom(1.2)">➕</button>
-    <button class="tool-btn" style="background:#334155;color:white" onclick="zoom(0.8)">➖</button>
     <button class="tool-btn" style="background:#3b82f6;color:white" onclick="exportData()">💾 Save File</button>
     <button class="tool-btn" style="background:#64748b;color:white" onclick="document.getElementById('fileInput').click()">📂 Load File</button>
     <input type="file" id="fileInput" style="display: none" onchange="importData(event)">
@@ -57,59 +51,56 @@
     const db = firebase.database().ref('familyTree');
 
     let familyData = [];
-    let scale = 1, pointX = 0, pointY = 0, start = { x: 0, y: 0 }, isDragging = false;
     const container = document.getElementById('tree-container');
 
-    // Automatic Cloud Sync
+    // Cloud Listener
     db.on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
         familyData = data;
         render();
       }
+    }, (error) => {
+      alert("Cloud Error: " + error.message);
     });
 
-    function saveToCloud() { db.set(familyData); }
-
-    // --- UI Logic ---
-    function zoom(amount) { scale *= amount; updateTransform(); }
-    function resetView() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
-    window.onmousedown = (e) => { if(e.target.closest('.btn') || e.target.closest('.node-avatar')) return; isDragging = true; start = { x: e.clientX - pointX, y: e.clientY - pointY }; };
-    window.onmousemove = (e) => { if (!isDragging) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; updateTransform(); };
-    window.onmouseup = () => isDragging = false;
-    function updateTransform() { container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
+    function saveToCloud() {
+      db.set(familyData).then(() => {
+        console.log("Saved to Cloud!");
+      }).catch((err) => {
+        alert("Save Failed: " + err.message);
+      });
+    }
 
     function importData(e) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        familyData = JSON.parse(ev.target.result);
-        saveToCloud(); // Push the loaded file directly to Firebase
+        try {
+          familyData = JSON.parse(ev.target.result);
+          saveToCloud();
+          alert("Success! Data sent to Cloud.");
+        } catch(err) { alert("Error reading file."); }
       };
       reader.readAsText(e.target.files[0]);
     }
 
-    function exportData() {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([JSON.stringify(familyData)], {type:"application/json"}));
-      a.download = "daaboul-tree-backup.json";
-      a.click();
-    }
+    // Basic View Logic
+    let scale = 1, pointX = 0, pointY = 0, start = { x: 0, y: 0 }, isDragging = false;
+    function zoom(amount) { scale *= amount; updateTransform(); }
+    function resetView() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
+    window.onmousedown = (e) => { if(e.target.closest('.btn')) return; isDragging = true; start = { x: e.clientX - pointX, y: e.clientY - pointY }; };
+    window.onmousemove = (e) => { if (!isDragging) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; updateTransform(); };
+    window.onmouseup = () => isDragging = false;
+    function updateTransform() { container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
 
     function editPerson(id) { 
       const p = familyData.find(x => x.id === id);
       p.name = prompt("Full Name:", p.name) || p.name;
-      p.gender = (prompt("Gender (male/female):", p.gender) || "male").toLowerCase();
       saveToCloud(); 
     }
     function addChild(pid) { 
-      const name = prompt("Name:"); 
+      const name = prompt("Child Name:"); 
       if(name) { familyData.push({ id: Date.now(), name, gender: "male", parentId: pid }); saveToCloud(); } 
-    }
-    function addSpouse(id) {
-      const p = familyData.find(x => x.id === id);
-      p.spouseName = prompt("Spouse Name:");
-      p.spouseGender = "female";
-      saveToCloud();
     }
 
     function render() {
@@ -118,16 +109,18 @@
         if(!items.length) return "";
         let h = "<ul>";
         items.forEach(m => {
-          const hasSpouse = !!m.spouseName;
-          h += `<li><div class="tree-node"><div class="avatar-pair">
-            <div class="node-avatar ${m.gender}">${m.name[0]}</div>
-            ${hasSpouse ? `<div class="marriage-line"></div><div class="node-avatar ${m.spouseGender}">${m.spouseName[0]}</div>` : ''}
-          </div><div class="name-tag">${m.name} ${hasSpouse ? '& '+m.spouseName : ''}</div>
-          <div class="node-actions"><button class="btn" onclick="editPerson(${m.id})">Edit</button><button class="btn" onclick="addChild(${m.id})">Child</button><button class="btn" onclick="addSpouse(${m.id})">Spouse</button></div></div>${build(m.id)}</li>`;
+          h += `<li><div class="tree-node"><div class="node-avatar ${m.gender}">${m.name[0]}</div><div class="name-tag">${m.name}</div>
+          <button class="btn" onclick="editPerson(${m.id})">EDIT</button> <button class="btn" onclick="addChild(${m.id})">+ CHILD</button></div>${build(m.id)}</li>`;
         });
         return h + "</ul>";
       };
       container.innerHTML = build(null);
+    }
+    function exportData() {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(familyData)], {type:"application/json"}));
+      a.download = "daaboul_backup.json";
+      a.click();
     }
   </script>
 </body>
