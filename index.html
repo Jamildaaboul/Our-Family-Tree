@@ -10,46 +10,50 @@
     :root { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --male: #2563eb; --female: #db2777; --line: #64748b; --highlight: #fef08a; }
     body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; width: 100vw; touch-action: none; }
     
-    .top-interface { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0f172a; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-    .header-title { color: white; margin: 0; font-family: "Lucida Calligraphy", cursive, serif; font-size: 20px; }
+    /* THE INTERFACE BOX */
+    .interface-layer { position: fixed; top: 0; left: 0; right: 0; z-index: 10000; background: #0f172a; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); pointer-events: auto; }
+    .header-title { color: white; margin: 0; font-family: "Lucida Calligraphy", cursive, serif; font-size: 22px; }
 
-    .controls-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
-    .search-input { padding: 10px; border-radius: 20px; border: 2px solid #cbd5e1; width: 160px; font-size: 14px; outline: none; }
+    .controls-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
     
-    #viewport { width: 100vw; height: 100vh; cursor: grab; display: flex; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; z-index: 100; }
-    #tree-container { transform-origin: center center; padding-top: 220px; }
+    /* SEARCH BOX FIX */
+    .search-input { padding: 12px 15px; border-radius: 25px; border: 3px solid #3b82f6; width: 220px; font-size: 16px; outline: none; background: white; pointer-events: auto; -webkit-user-select: text; user-select: text; }
 
+    #viewport { width: 100vw; height: 100vh; cursor: grab; display: flex; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; z-index: 100; }
+    #tree-container { transform-origin: center center; padding-top: 250px; }
+
+    /* TREE STYLING */
     .tree ul { display: flex; justify-content: center; padding: 20px 0; position: relative; list-style: none; }
     .tree li { position: relative; padding: 20px 10px 0; }
     .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 3px solid var(--line); width: 50%; height: 20px; }
     .tree li::after { right: auto; left: 50%; border-left: 3px solid var(--line); }
     
-    .tree-node { background: var(--card); border: 2px solid #cbd5e1; border-radius: 20px; width: 240px; padding: 15px; display: inline-block; }
-    .highlighted { background: var(--highlight) !important; border-color: #eab308 !important; box-shadow: 0 0 20px #facc15; }
+    .tree-node { background: var(--card); border: 2px solid #cbd5e1; border-radius: 20px; width: 250px; padding: 15px; display: inline-block; transition: background 0.3s; }
+    .highlighted { background: var(--highlight) !important; border-color: #eab308 !important; box-shadow: 0 0 25px #facc15; transform: scale(1.05); }
 
-    .avatar-pair { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
-    .node-avatar { width: 55px; height: 55px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; background-color: #cbd5e1; }
+    .avatar-pair { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; }
+    .node-avatar { width: 60px; height: 60px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; background-color: #cbd5e1; }
     .male { background-color: var(--male); } .female { background-color: var(--female); }
     
-    .name-tag { font-weight: bold; font-size: 15px; display: block; margin-top: 5px; }
-    .dob-tag { font-size: 12px; color: #64748b; display: block; margin-bottom: 10px; }
+    .name-tag { font-weight: bold; font-size: 15px; display: block; margin: 5px 0; }
+    .dob-tag { font-size: 13px; color: #475569; display: block; margin-bottom: 10px; font-weight: 600; }
 
-    .btn { padding: 8px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; background: #e2e8f0; }
+    .btn { padding: 10px 8px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; background: #e2e8f0; pointer-events: auto; }
     .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 
-    .mobile-btn { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #3b82f6; background: white; font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10000; }
+    .zoom-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #3b82f6; background: white; font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
   </style>
 </head>
 <body>
 
-  <div class="top-interface">
+  <div class="interface-layer" id="top-nav">
     <h2 class="header-title">The Daaboul Family Tree</h2>
     <div class="controls-row">
-      <button class="mobile-btn" onpointerdown="zoom(0.8)">−</button>
-      <button class="mobile-btn" onpointerdown="zoom(1.2)">+</button>
-      <input type="text" class="search-input" id="searchBox" placeholder="🔍 Search Name" oninput="doSearch()">
-      <button class="btn" style="background:#3b82f6; color:white; padding: 10px;" onclick="resetView()">🏠 Home</button>
-      <button class="btn" style="background:#475569; color:white; padding: 10px;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
+      <button class="zoom-btn" onpointerdown="zoom(0.8)">−</button>
+      <button class="zoom-btn" onpointerdown="zoom(1.2)">+</button>
+      <input type="text" class="search-input" id="searchBox" placeholder="Search Names..." oninput="runSearch()">
+      <button class="btn" style="background:#3b82f6; color:white;" onclick="resetView()">🏠 Home</button>
+      <button class="btn" style="background:#475569; color:white;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
       <input type="file" id="fileIn" style="display:none" onchange="importData(event)">
     </div>
   </div>
@@ -84,7 +88,7 @@
 
     function save() { db.set(familyData); }
 
-    function doSearch() {
+    function runSearch() {
       const term = document.getElementById('searchBox').value.toLowerCase();
       document.querySelectorAll('.tree-node').forEach(node => {
         const name = node.querySelector('.name-tag').innerText.toLowerCase();
@@ -99,13 +103,13 @@
         let h = "<ul>";
         items.forEach(m => {
           const hasS = !!m.spouseName;
-          const photoStyle = m.photo ? `style="background-image:url('${m.photo}')"` : '';
-          const spousePhotoStyle = m.spousePhoto ? `style="background-image:url('${m.spousePhoto}')"` : '';
+          const p1 = m.photo ? `style="background-image:url('${m.photo}')"` : '';
+          const p2 = m.spousePhoto ? `style="background-image:url('${m.spousePhoto}')"` : '';
 
           h += `<li><div class="tree-node" id="node-${m.id}">
             <div class="avatar-pair">
-              <div class="node-avatar ${m.gender}" ${photoStyle}>${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
-              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${spousePhotoStyle}>${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
+              <div class="node-avatar ${m.gender}" ${p1} onclick="addPhoto(${m.id}, false)">${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
+              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="addPhoto(${m.id}, true)">${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
             </div>
             <span class="name-tag">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</span>
             <span class="dob-tag">${m.dob || ''} ${hasS && m.spouseDOB ? '| ' + m.spouseDOB : ''}</span>
@@ -122,11 +126,21 @@
       document.getElementById('tree-container').innerHTML = build(null) || build(undefined);
     }
 
+    // PHOTO UPDATE FIX
+    function addPhoto(id, isSpouse) {
+      const p = familyData.find(x => x.id == id);
+      const url = prompt("Paste the Image Link (URL) here:");
+      if(url) {
+        if(isSpouse) p.spousePhoto = url;
+        else p.photo = url;
+        save();
+      }
+    }
+
     function editP(id) {
       const p = familyData.find(x => x.id == id);
-      p.name = prompt("Full Name:", p.name);
-      p.dob = prompt("Birth Year:", p.dob || "");
-      p.photo = prompt("Photo URL Link:", p.photo || "");
+      p.name = prompt("Name:", p.name);
+      p.dob = prompt("Year:", p.dob || "");
       save();
     }
     function addC(pid) {
@@ -136,17 +150,16 @@
     function addS(id) {
       const p = familyData.find(x => x.id == id);
       p.spouseName = prompt("Spouse Name:");
-      p.spouseDOB = prompt("Spouse Birth Year:");
-      p.spousePhoto = prompt("Spouse Photo URL Link:");
+      p.spouseDOB = prompt("Spouse Year:");
       save();
     }
     function delP(id) {
-      if(confirm("Delete this person and their branch?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
+      if(confirm("Delete?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
     }
 
+    // ZOOM & PAN
     let s = 1, x = 0, y = 0, startX = 0, startY = 0, isDown = false;
     const ct = document.getElementById('tree-container');
-
     function zoom(amt) { s *= amt; apply(); }
     function resetView() { s = 1; x = 0; y = 0; apply(); }
     function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
@@ -154,9 +167,9 @@
     const start = (ex, ey) => { isDown = true; startX = ex - x; startY = ey - y; };
     const move = (ex, ey) => { if(!isDown) return; x = ex - startX; y = ey - startY; apply(); };
 
-    window.onmousedown = e => { if(e.target.closest('.top-interface') || e.target.closest('.btn')) return; start(e.clientX, e.clientY); };
+    window.onmousedown = e => { if(e.target.closest('#top-nav') || e.target.closest('.btn')) return; start(e.clientX, e.clientY); };
     window.onmousemove = e => move(e.clientX, e.clientY);
-    window.ontouchstart = e => { if(e.target.closest('.top-interface') || e.target.closest('.btn')) return; start(e.touches[0].clientX, e.touches[0].clientY); };
+    window.ontouchstart = e => { if(e.target.closest('#top-nav') || e.target.closest('.btn')) return; start(e.touches[0].clientX, e.touches[0].clientY); };
     window.ontouchmove = e => move(e.touches[0].clientX, e.touches[0].clientY);
     window.onmouseup = window.ontouchend = () => isDown = false;
 
