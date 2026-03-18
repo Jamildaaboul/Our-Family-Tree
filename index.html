@@ -18,7 +18,6 @@
     body { 
       font-family: 'Segoe UI', sans-serif; 
       background: var(--paper); 
-      /* Subtle parchment texture */
       background-image: url('https://www.transparenttextures.com/patterns/p6.png');
       margin: 0; 
       overflow: hidden; 
@@ -38,9 +37,9 @@
     .controls-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
     .search-input { padding: 10px 15px; border-radius: 25px; border: 2px solid #8d6e63; width: 200px; outline: none; }
 
-    /* LAYOUT FIX: Centers the root box horizontally and anchors it to the top */
-    #viewport { width: 100vw; height: 100vh; cursor: grab; display: flex; align-items: flex-start; justify-content: center; position: absolute; top: 0; left: 0; z-index: 100; }
-    #tree-container { transform-origin: top center; padding-top: 180px; display: flex; justify-content: center; }
+    /* LAYOUT FIX: Forces the root of the tree to the absolute center of the screen */
+    #viewport { width: 100vw; height: 100vh; cursor: grab; position: relative; overflow: hidden; z-index: 100; touch-action: none; }
+    #tree-container { position: absolute; left: 50%; top: 0; padding-top: 220px; transform-origin: top center; transform: translate(-50%, 0) scale(1); }
 
     /* ORGANIC TREE BRANCHES */
     .tree ul { display: flex; justify-content: center; padding: 40px 0; position: relative; list-style: none; }
@@ -79,7 +78,6 @@
 
     .avatar-pair { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; }
     
-    /* LETTER FIX: Perfectly centers the letters and restores visibility */
     .node-avatar { 
       width: 65px; height: 65px; border-radius: 50%; 
       border: 3px solid var(--wood); 
@@ -88,8 +86,8 @@
       font-size: 26px; font-weight: 900; color: white;
       cursor: pointer; position: relative; 
     }
+    .node-avatar::after { content: '📸'; position: absolute; bottom: -5px; right: -5px; font-size: 14px; background: white; border-radius: 50%; padding: 2px; border: 1px solid var(--wood); }
     
-    /* Restored colors for empty photo circles */
     .male { background-color: var(--male); } 
     .female { background-color: var(--female); }
     
@@ -150,96 +148,3 @@
       const term = document.getElementById('searchBox').value.toLowerCase();
       document.querySelectorAll('.tree-node').forEach(node => {
         const name = node.querySelector('.name-tag').innerText.toLowerCase();
-        node.classList.toggle('highlighted', term && name.includes(term));
-      });
-    }
-
-    function render() {
-      const build = (pid) => {
-        const items = familyData.filter(x => x.parentId == pid);
-        if(!items.length) return "";
-        let h = "<ul>";
-        items.forEach(m => {
-          const hasS = !!m.spouseName;
-          const p1 = m.photo ? `style="background-image:url('${m.photo}')"` : '';
-          const p2 = m.spousePhoto ? `style="background-image:url('${m.spousePhoto}')"` : '';
-
-          // Added .toUpperCase() so the letters are always perfectly capitalized
-          h += `<li><div class="tree-node" id="node-${m.id}">
-            <div class="avatar-pair">
-              <div class="node-avatar ${m.gender}" ${p1} onclick="pickNewFile(${m.id}, false)">${m.photo ? '' : (m.name ? m.name[0].toUpperCase() : '?')}</div>
-              ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="pickNewFile(${m.id}, true)">${m.spousePhoto ? '' : m.spouseName[0].toUpperCase()}</div>` : ''}
-            </div>
-            <span class="name-tag">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</span>
-            <span class="dob-tag">${m.dob || ''}</span>
-            <div class="node-actions">
-              <button class="btn" onclick="editP(${m.id})">Edit</button>
-              <button class="btn" style="background:var(--leaf);color:white" onclick="addC(${m.id})">+Child</button>
-              <button class="btn" style="background:#8d6e63;color:white" onclick="addS(${m.id})">+Spouse</button>
-              <button class="btn" style="background:#d32f2f;color:white" onclick="delP(${m.id})">Del</button>
-            </div>
-          </div>${build(m.id)}</li>`;
-        });
-        return h + "</ul>";
-      };
-      document.getElementById('tree-container').innerHTML = build(null) || build(undefined);
-    }
-
-    function pickNewFile(id, isSpouse) {
-      activeTarget = { id, isSpouse };
-      document.getElementById('imagePicker').click();
-    }
-
-    document.getElementById('imagePicker').onchange = function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const person = familyData.find(x => x.id == activeTarget.id);
-        if(activeTarget.isSpouse) person.spousePhoto = event.target.result;
-        else person.photo = event.target.result;
-        save();
-      };
-      reader.readAsDataURL(file);
-    };
-
-    function editP(id) {
-      const p = familyData.find(x => x.id == id);
-      p.name = prompt("Name:", p.name);
-      p.dob = prompt("Year:", p.dob || "");
-      save();
-    }
-    function addC(pid) {
-      const n = prompt("Child Name:");
-      if(n) { familyData.push({id: Date.now(), name: n, gender: "male", parentId: pid, dob: ""}); save(); }
-    }
-    function addS(id) {
-      const p = familyData.find(x => x.id == id);
-      p.spouseName = prompt("Spouse Name:");
-      p.spouseDOB = prompt("Spouse Year:");
-      save();
-    }
-    function delP(id) {
-      if(confirm("Delete person and descendants?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
-    }
-
-    let s = 1, x = 0, y = 0, startX = 0, startY = 0, isDown = false;
-    const ct = document.getElementById('tree-container');
-    function zoom(amt) { s *= amt; apply(); }
-    function resetView() { s = 1; x = 0; y = 0; apply(); }
-    function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
-
-    window.onmousedown = e => { if(e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.node-avatar')) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
-    window.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; apply(); };
-    window.ontouchstart = e => { if(e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.node-avatar')) return; isDown = true; startX = e.touches[0].clientX - x; startY = e.touches[0].clientY - y; };
-    window.ontouchmove = e => { if(!isDown) return; x = e.touches[0].clientX - startX; y = e.touches[0].clientY - startY; apply(); };
-    window.onmouseup = window.ontouchend = () => isDown = false;
-
-    function importData(e) {
-      const r = new FileReader();
-      r.onload = ev => { familyData = JSON.parse(ev.target.result); render(); save(); };
-      r.readAsText(e.target.files[0]);
-    }
-  </script>
-</body>
-</html>
