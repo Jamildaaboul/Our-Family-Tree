@@ -8,135 +8,153 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     :root { 
-      --brass-light: #fceabb; 
-      --brass-dark: #f8b500;
-      --pipe: #d4af37;
-      --wood-dark: #2d1a11; 
-      --engraved: #3e2723;
-      --male-ink: #1e88e5; 
-      --female-ink: #d81b60; 
+      --gold-light: #f4d068; 
+      --gold-main: #c59b27;
+      --gold-dark: #8c6200;
+      --wood-bg: #2b1b12;
+      --wood-dark: #140b05;
+      --parchment: #f4e8d1;
+      --leather: #3d2314;
+      --text-dark: #2a1b10;
+      --ink: #8b0000; 
+      --ink-blue: #002244; 
     }
     
     html, body { 
-      font-family: 'Segoe UI', serif; 
-      background: var(--wood-dark) url('https://www.transparenttextures.com/patterns/dark-wood-50.png');
+      font-family: 'Georgia', serif; 
+      background: radial-gradient(circle, var(--wood-bg) 0%, var(--wood-dark) 100%);
+      background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), radial-gradient(circle, var(--wood-bg) 0%, var(--wood-dark) 100%);
       margin: 0; padding: 0; overflow: hidden; 
       height: 100%; width: 100%; touch-action: none; 
     }
     
     .interface-layer { 
       position: fixed; top: 0; left: 0; right: 0; z-index: 999999; 
-      background: rgba(45, 26, 17, 0.95); padding: 15px; 
+      background: rgba(20, 11, 5, 0.95); padding: 15px; 
       display: flex; flex-direction: column; align-items: center; gap: 10px; 
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8); pointer-events: auto;
-      border-bottom: 2px solid var(--pipe);
+      box-shadow: 0 5px 25px rgba(0,0,0,0.9); pointer-events: auto;
+      border-bottom: 3px solid var(--gold-main);
     }
     .header-title { 
-      color: var(--brass-light); margin: 0; 
-      font-family: "Lucida Calligraphy", cursive, serif; font-size: 26px;
+      color: var(--gold-light); margin: 0; 
+      font-family: "Lucida Calligraphy", "Times New Roman", cursive, serif; 
+      font-size: 28px; letter-spacing: 1px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      padding: 5px 30px; border: 2px solid var(--gold-main); border-radius: 10px;
+      background: linear-gradient(180deg, rgba(197,155,39,0.2) 0%, rgba(140,98,0,0.4) 100%);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
 
     .controls-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
     .search-input { 
-      padding: 10px 15px; border-radius: 5px; border: 2px solid var(--engraved); 
-      width: 180px; outline: none; font-size: 14px; color: var(--engraved);
-      background: #fff; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+      padding: 10px 15px; border-radius: 20px; border: 2px solid var(--gold-dark); 
+      width: 180px; outline: none; font-size: 14px; color: var(--text-dark);
+      background: var(--parchment); box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+      font-family: 'Georgia', serif; font-style: italic;
     }
 
     #viewport { width: 100vw; height: 100vh; cursor: grab; position: absolute; top: 0; left: 0; z-index: 100; overflow: hidden; }
     
+    /* UNBREAKABLE HORIZONTAL LAYOUT */
     #tree-container { 
       position: absolute; left: 0; top: 0; transform-origin: 0 0; 
-      width: max-content; min-width: 100vw; padding: 130px 40px 100px 40px; 
-      display: flex; justify-content: center; 
+      width: max-content !important; min-width: 100vw; padding: 160px 100px 150px 100px; 
     }
 
     .tree ul { 
-      display: flex; justify-content: center; padding: 40px 0 0 0; margin: 0;
-      position: relative; list-style: none;
+      display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; 
+      white-space: nowrap !important; /* Forces the tablet to never wrap elements */
+      justify-content: center !important; align-items: flex-start !important;
+      padding: 45px 0 0 0; margin: 0; position: relative; list-style: none;
+      width: max-content !important;
     }
     
     .tree li { 
-      position: relative; padding: 40px 15px 0; 
-      text-align: center; 
-      flex: 0 0 auto; 
-      min-width: max-content; 
+      display: flex !important; flex-direction: column !important; align-items: center !important;
+      position: relative; padding: 45px 10px 0; 
+      flex: 0 0 auto !important; width: max-content !important; 
     }
     
+    /* CURVED GOLDEN BRANCHES */
     .tree li::before, .tree li::after { 
       content: ''; position: absolute; top: 0; right: 50%; 
-      border-top: 5px solid var(--pipe); width: 50%; height: 40px; border-radius: 0;
-      box-shadow: 0 3px 5px rgba(0,0,0,0.6);
+      border-top: 4px solid var(--gold-light); width: 50%; height: 45px; 
+      border-radius: 25px 0 0 0; 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);
     }
     .tree li::after { 
-      right: auto; left: 50%; border-left: 5px solid var(--pipe); 
-      margin-left: -2.5px; 
+      right: auto; left: 50%; border-left: 4px solid var(--gold-light); 
+      border-radius: 0 25px 0 0; margin-left: -2px; 
     }
     .tree li:only-child::after, .tree li:only-child::before { display: none; }
     .tree li:only-child { padding-top: 0; }
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-    .tree li:last-child::before { border-right: 5px solid var(--pipe); margin-right: -2.5px; }
+    .tree li:last-child::before { border-right: 4px solid var(--gold-light); border-radius: 0 25px 0 0; margin-right: -2px; }
     
     .tree ul ul::before { 
       content: ''; position: absolute; top: 0; left: 50%; 
-      border-left: 5px solid var(--pipe); width: 0; height: 40px; 
-      margin-left: -2.5px; box-shadow: 3px 0 5px rgba(0,0,0,0.6);
+      border-left: 4px solid var(--gold-light); width: 0; height: 45px; 
+      margin-left: -2px; box-shadow: 2px 0 4px rgba(0,0,0,0.5);
     }
 
-    /* THE FIX: changed display to inline-flex and added margin: 0 auto */
+    /* REGAL PARCHMENT PLAQUES */
     .tree-node { 
-      background: linear-gradient(135deg, var(--brass-light), var(--brass-dark));
-      border: 3px solid #8c6200; 
-      border-radius: 6px; 
-      width: 320px; 
-      padding: 12px; 
-      display: inline-flex; /* Magic fix 1 */
-      align-items: center; gap: 15px;
-      margin: 0 auto; /* Magic fix 2 */
-      box-shadow: 6px 6px 15px rgba(0,0,0,0.8), inset 0 0 8px rgba(255,255,255,0.4); 
+      background: var(--parchment);
+      background-image: url('https://www.transparenttextures.com/patterns/old-wall.png');
+      border: 5px solid var(--gold-main); 
+      border-radius: 40px; 
+      min-width: 160px;
+      padding: 15px 25px 25px 25px; 
+      display: inline-flex !important; flex-direction: column; align-items: center; gap: 10px;
+      margin: 0 auto; 
+      box-shadow: 0 10px 20px rgba(0,0,0,0.8), inset 0 0 0 2px var(--gold-light), inset 0 0 15px rgba(0,0,0,0.5); 
       position: relative;
+      white-space: normal !important; /* Allows text inside the box to wrap normally */
     }
     
-    .screw { position: absolute; width: 8px; height: 8px; background: #555; border-radius: 50%; box-shadow: inset 1px 1px 2px #222, 1px 1px 1px rgba(255,255,255,0.5); }
-    .screw::after { content: ''; position: absolute; top: 3px; left: 1px; width: 6px; height: 1.5px; background: #222; transform: rotate(45deg); }
-    .s-tl { top: 6px; left: 6px; } .s-tr { top: 6px; right: 6px; }
-    .s-bl { bottom: 6px; left: 6px; } .s-br { bottom: 6px; right: 6px; }
+    .crest-icon { font-size: 24px; color: var(--gold-main); margin: 0 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
 
-    .avatar-pair { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+    .avatar-pair { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 0; }
     
     .node-avatar { 
-      width: 60px; height: 60px; 
-      border-radius: 6px; 
-      border: 3px solid var(--engraved); 
-      background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center;
+      width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--gold-dark); 
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-main));
+      display: flex; align-items: center; justify-content: center;
       font-family: "Lucida Calligraphy", cursive, serif; font-size: 28px; font-weight: 900;
       cursor: pointer; position: relative; 
-      color: #fff; text-shadow: 0 1px 2px #000;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+      color: var(--text-dark); text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+      box-shadow: 2px 4px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.6);
     }
-    .node-avatar::after { content: '📸'; position: absolute; bottom: -8px; right: -8px; font-size: 12px; background: #fff; color: var(--engraved); border-radius: 50%; padding: 3px; border: 1px solid var(--engraved); box-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+    .node-avatar.has-photo { background-size: cover; background-position: center; border: 3px solid var(--gold-light); }
+    .node-avatar::after { content: '📸'; position: absolute; bottom: -5px; right: -5px; font-size: 10px; background: var(--leather); color: var(--gold-light); border-radius: 50%; padding: 3px; border: 1px solid var(--gold-main); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
     
-    .male { background-color: var(--male-ink); } 
-    .female { background-color: var(--female-ink); }
+    .male { color: var(--ink-blue); } 
+    .female { color: var(--ink); }
     
-    .node-info { flex-grow: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+    .node-info { display: flex; flex-direction: column; align-items: center; text-align: center; }
     
-    .name-tag { font-family: "Lucida Calligraphy", cursive, serif; font-weight: bold; font-size: 16px; color: var(--engraved); margin: 0 0 5px 0; line-height: 1.2; text-shadow: 1px 1px 0px rgba(255,255,255,0.4); }
-    .dob-tag { font-family: 'Segoe UI', serif; font-size: 13px; color: #5c4033; font-weight: bold; margin-bottom: 8px; }
+    .name-tag { font-family: 'Georgia', serif; font-weight: bold; font-size: 18px; color: var(--text-dark); margin: 5px 0 2px 0; line-height: 1.2; text-shadow: 1px 1px 0px rgba(255,255,255,0.6); }
+    .dob-tag { font-family: 'Georgia', serif; font-size: 14px; color: #5c4033; font-weight: normal; margin-bottom: 0; font-style: italic; }
 
-    .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; }
+    /* LEATHER HANGING TABS */
+    .node-actions { 
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; 
+      position: absolute; bottom: -15px; width: 120%;
+    }
     .btn { 
-      padding: 6px; border: 1px solid rgba(0,0,0,0.3); border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; 
-      background: var(--engraved); color: #fff; 
-      box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+      padding: 4px 8px; border: 1px dashed var(--gold-main); border-radius: 6px; 
+      font-size: 9px; cursor: pointer; font-weight: bold; text-transform: uppercase; 
+      background: var(--leather); color: var(--gold-light); 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.2);
+      font-family: 'Georgia', serif; letter-spacing: 0.5px;
     }
     .btn:active { transform: scale(0.95); }
+    .btn-red { background: #5a1818; }
     
-    .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--brass-light); background: var(--pipe); color: var(--engraved); font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 3px 8px rgba(0,0,0,0.6); }
-    .zoom-btn:active { transform: scale(0.9); background: var(--brass-dark); }
+    .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold-main); background: var(--wood-bg); color: var(--gold-light); font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 3px 8px rgba(0,0,0,0.8); }
+    .zoom-btn:active { transform: scale(0.9); background: var(--leather); }
     
-    .highlighted { box-shadow: 0 0 20px #fff, inset 0 0 15px #fff !important; }
+    .highlighted { box-shadow: 0 0 30px var(--gold-light), inset 0 0 20px var(--gold-light) !important; }
 
     @media print {
       #top-nav { display: none !important; }
@@ -155,9 +173,9 @@
       
       <input type="text" class="search-input" id="searchBox" placeholder="Search Ancestors..." oninput="runSearch()">
       
-      <button class="btn" style="background:#2e7d32; color:white; padding: 10px;" onclick="resetView()">🏠 Home</button>
-      <button class="btn" style="background:var(--engraved); color:white; padding: 10px;" onclick="document.getElementById('fileIn').click()">📂 Load</button>
-      <button class="btn" style="background:var(--male-ink); color:white; padding: 10px;" onclick="window.print()">🖨️ Save PDF</button>
+      <button class="btn" style="background:#2e4c23; padding: 8px 12px; font-size: 11px; border: 1px solid var(--gold-main);" onclick="resetView()">🏠 Home</button>
+      <button class="btn" style="padding: 8px 12px; font-size: 11px; border: 1px solid var(--gold-main);" onclick="document.getElementById('fileIn').click()">📂 Load</button>
+      <button class="btn" style="background:var(--ink-blue); padding: 8px 12px; font-size: 11px; border: 1px solid var(--gold-main);" onclick="window.print()">🖨️ Save PDF</button>
       
       <input type="file" id="fileIn" style="display:none" onchange="importData(event)">
       <input type="file" id="imagePicker" style="display:none" accept="image/*">
@@ -203,7 +221,7 @@
 
     function render() {
       if (!familyData || familyData.length === 0) {
-        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--brass-light); margin-top: 150px; font-family: \"Lucida Calligraphy\", cursive;'>Tree is empty. Click LOAD.</h3>";
+        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--gold-light); margin-top: 150px; font-family: \"Lucida Calligraphy\", cursive;'>Tree is empty. Click LOAD.</h3>";
         return;
       }
 
@@ -218,6 +236,8 @@
           const hasS = !!m.spouseName;
           const p1 = m.photo ? `style="background-image:url('${m.photo}')"` : '';
           const p2 = m.spousePhoto ? `style="background-image:url('${m.spousePhoto}')"` : '';
+          const c1 = m.photo ? 'has-photo' : '';
+          const c2 = m.spousePhoto ? 'has-photo' : '';
           
           const l1 = (m.name && m.name.length > 0) ? m.name[0].toUpperCase() : '?';
           const l2 = (hasS && m.spouseName && m.spouseName.length > 0) ? m.spouseName[0].toUpperCase() : '?';
@@ -225,23 +245,19 @@
 
           h += `<li>
             <div class="tree-node" id="node-${m.id}">
-              <div class="screw s-tl"></div><div class="screw s-tr"></div>
-              <div class="screw s-bl"></div><div class="screw s-br"></div>
-              
               <div class="avatar-pair">
-                <div class="node-avatar ${m.gender}" ${p1} onclick="pickNewFile(${m.id}, false)">${m.photo ? '' : l1}</div>
-                ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" ${p2} onclick="pickNewFile(${m.id}, true)">${m.spousePhoto ? '' : l2}</div>` : ''}
+                <div class="node-avatar ${m.gender} ${c1}" ${p1} onclick="pickNewFile(${m.id}, false)">${m.photo ? '' : l1}</div>
+                ${hasS ? `<div class="crest-icon">🛡️</div><div class="node-avatar ${m.spouseGender || 'female'} ${c2}" ${p2} onclick="pickNewFile(${m.id}, true)">${m.spousePhoto ? '' : l2}</div>` : ''}
               </div>
-              
               <div class="node-info">
-                <span class="name-tag">${m.name || 'Unknown'}${hasS ? '<br>& ' + m.spouseName : ''}</span>
+                <span class="name-tag">${m.name || 'Unknown'}${hasS ? ' & ' + m.spouseName : ''}</span>
                 <span class="dob-tag">${m.dob || ''}</span>
-                <div class="node-actions">
-                  <button class="btn" style="background:#5d4037;" onclick="editP(${m.id})">Edit</button>
-                  <button class="btn" style="background:#2e7d32;" onclick="addC(${m.id})">+Child</button>
-                  <button class="btn" style="background:#8d6e63;" onclick="addS(${m.id})">+Spouse</button>
-                  <button class="btn" style="background:#c62828;" onclick="delP(${m.id})">Del</button>
-                </div>
+              </div>
+              <div class="node-actions">
+                <button class="btn" onclick="editP(${m.id})">Edit</button>
+                <button class="btn" onclick="addC(${m.id})">+Child</button>
+                <button class="btn" onclick="addS(${m.id})">+Spouse</button>
+                <button class="btn btn-red" onclick="delP(${m.id})">Del</button>
               </div>
             </div>
             ${build(children)}
@@ -328,7 +344,7 @@
     function resetView() { centerOnRoot(); }
     function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
 
-    function isUI(e) { return e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.node-avatar'); }
+    function isUI(e) { return e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.node-actions') || e.target.closest('.node-avatar'); }
 
     vp.onmousedown = e => { if(isUI(e)) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
     vp.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; apply(); };
