@@ -19,30 +19,24 @@
       font-family: 'Segoe UI', sans-serif; 
       background: var(--paper); 
       background-image: url('https://www.transparenttextures.com/patterns/p6.png');
-      margin: 0; 
-      padding: 0;
-      overflow: hidden; 
-      height: 100%; 
-      width: 100%; 
-      touch-action: none; 
+      margin: 0; padding: 0; overflow: hidden; 
+      height: 100%; width: 100%; touch-action: none; 
     }
     
-    /* BULLETPROOF TOP NAVIGATION */
     .interface-layer { 
       position: fixed; top: 0; left: 0; right: 0; z-index: 999999; 
       background: rgba(62, 39, 35, 0.98); padding: 15px; 
       display: flex; flex-direction: column; align-items: center; gap: 10px; 
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto;
     }
     .header-title { color: #d7ccc8; margin: 0; font-family: "Lucida Calligraphy", cursive, serif; font-size: 24px; }
 
     .controls-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
-    .search-input { padding: 10px 15px; border-radius: 25px; border: 2px solid #8d6e63; width: 180px; outline: none; }
+    .search-input { padding: 10px 15px; border-radius: 25px; border: 2px solid #8d6e63; width: 180px; outline: none; font-size: 14px; }
 
     #viewport { width: 100vw; height: 100vh; cursor: grab; position: absolute; top: 0; left: 0; z-index: 100; overflow: hidden; }
-    #tree-container { position: absolute; left: 50%; top: 0; padding-top: 240px; transform-origin: top center; transform: translate(-50%, 0) scale(1); display: flex; justify-content: center; }
+    #tree-container { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 
-    /* TREE STRUCTURE */
     .tree ul { display: flex; justify-content: center; padding: 40px 0; position: relative; list-style: none; margin: 0; }
     .tree li { position: relative; padding: 40px 15px 0; }
     
@@ -58,7 +52,6 @@
     .tree li:first-child::after { border-radius: 10px 0 0 0; }
     .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 6px solid var(--wood); width: 0; height: 40px; }
 
-    /* NODE STYLING */
     .tree-node { 
       background: white; border: 4px solid var(--wood); border-radius: 15px; 
       width: 260px; padding: 15px; display: inline-block; 
@@ -82,17 +75,16 @@
     .btn { padding: 8px; border: none; border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; background: #efebe9; color: var(--wood); border-bottom: 2px solid #d7ccc8; }
     .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
     
-    /* FIXED ZOOM BUTTONS */
-    .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #d7ccc8; background: var(--wood); color: white; font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 999999; }
+    /* FAST-TOUCH ZOOM BUTTONS */
+    .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #d7ccc8; background: var(--wood); color: white; font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
     .zoom-btn:active { transform: scale(0.9); background: #3e2723; }
     
     .highlighted { background: #fff9c4 !important; border-color: #fbc02d !important; }
 
-    /* HIDES MENU WHEN PRINTING TO PDF */
     @media print {
       #top-nav { display: none !important; }
       body { background: white !important; }
-      #tree-container { transform: none !important; position: relative !important; left: 0 !important; padding-top: 20px !important; }
+      #tree-container { transform: none !important; position: relative !important; left: 0 !important; top: 0 !important; padding-top: 20px !important; }
     }
   </style>
 </head>
@@ -101,8 +93,8 @@
   <div class="interface-layer" id="top-nav">
     <h2 class="header-title">The Daaboul Family Tree</h2>
     <div class="controls-row">
-      <button class="zoom-btn" onclick="zoom(0.8)">−</button>
-      <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+      <button type="button" class="zoom-btn" onpointerdown="triggerZoom(event, 0.8)">-</button>
+      <button type="button" class="zoom-btn" onpointerdown="triggerZoom(event, 1.2)">+</button>
       
       <input type="text" class="search-input" id="searchBox" placeholder="Search Ancestors..." oninput="runSearch()">
       
@@ -154,7 +146,7 @@
 
     function render() {
       if (!familyData || familyData.length === 0) {
-        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--wood); margin-top:50px;'>Tree is empty. Click LOAD.</h3>";
+        document.getElementById('tree-container').innerHTML = "<h3 style='color:var(--wood); margin-left: 20px;'>Tree is empty. Click LOAD.</h3>";
         return;
       }
 
@@ -195,18 +187,23 @@
       document.getElementById('tree-container').innerHTML = build(roots);
 
       if(isFirstLoad) {
-        setTimeout(centerOnRoot, 100);
+        // Half-second delay gives the tablet time to finish drawing before measuring
+        setTimeout(centerOnRoot, 500); 
         isFirstLoad = false;
       }
     }
 
     function centerOnRoot() {
-      const rootNode = document.querySelector('.tree > ul > li > .tree-node');
+      const rootNode = document.querySelector('.tree-node');
       if(rootNode) {
-        const box = rootNode.getBoundingClientRect();
-        const screenCenter = window.innerWidth / 2;
-        const boxCenter = box.left + (box.width / 2);
-        x += (screenCenter - boxCenter); 
+        s = 1; x = 0; y = 150;
+        apply(); // Temporarily pin to 0 to get a clean measurement
+        
+        const rect = rootNode.getBoundingClientRect();
+        const rootCenterX = rect.left + (rect.width / 2);
+        const screenCenterX = window.innerWidth / 2;
+        
+        x = screenCenterX - rootCenterX; // Shift perfectly to middle
         apply();
       }
     }
@@ -249,25 +246,36 @@
       if(confirm("Delete person and descendants?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
     }
 
-    let s = 1, x = 0, y = 0, startX = 0, startY = 0, isDown = false;
+    // Default starting point so it never starts truly blank
+    let s = 1, x = window.innerWidth / 4, y = 150, startX = 0, startY = 0, isDown = false;
     const ct = document.getElementById('tree-container');
+    const vp = document.getElementById('viewport');
     
-    function zoom(amt) { s *= amt; apply(); }
-    function resetView() { s = 1; x = 0; y = 0; centerOnRoot(); apply(); }
-    function apply() { ct.style.transform = `translate(calc(-50% + ${x}px), ${y}px) scale(${s})`; }
-
-    // TOUCH BARRIER: If you tap ANY button or the top menu, it immediately blocks the drag motion.
-    function isUI(e) {
-      return e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.zoom-btn') || e.target.closest('.node-avatar');
+    // Forced button trigger
+    function triggerZoom(event, amt) {
+      event.preventDefault(); // Stop tablet swipe logic
+      event.stopPropagation();
+      s *= amt;
+      apply();
     }
+    
+    function resetView() { centerOnRoot(); }
+    function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
 
-    window.onmousedown = e => { if(isUI(e)) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
-    window.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; apply(); };
-    window.ontouchstart = e => { if(isUI(e)) return; isDown = true; startX = e.touches[0].clientX - x; startY = e.touches[0].clientY - y; };
-    window.ontouchmove = e => { if(!isDown) return; x = e.touches[0].clientX - startX; y = e.touches[0].clientY - startY; apply(); };
+    // Touch events only trigger on the background viewport now
+    function isUI(e) { return e.target.closest('#top-nav') || e.target.closest('.btn') || e.target.closest('.node-avatar'); }
+
+    vp.onmousedown = e => { if(isUI(e)) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
+    vp.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; apply(); };
+    vp.ontouchstart = e => { if(isUI(e)) return; isDown = true; startX = e.touches[0].clientX - x; startY = e.touches[0].clientY - y; };
+    vp.ontouchmove = e => { if(!isDown) return; x = e.touches[0].clientX - startX; y = e.touches[0].clientY - startY; apply(); };
     window.onmouseup = window.ontouchend = () => isDown = false;
 
     function importData(e) {
       const r = new FileReader();
       r.onload = ev => { familyData = JSON.parse(ev.target.result); isFirstLoad = true; render(); save(); };
       r.readAsText(e.target.files[0]);
+    }
+  </script>
+</body>
+</html>
