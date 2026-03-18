@@ -83,71 +83,108 @@
     <input type="file" id="photoInput" style="display: none" onchange="handlePhotoUpload(event)" accept="image/*">
   </div>
   <div id="viewport"><div id="tree-container" class="tree"></div></div>
-  <script>
-    let scale = 1, pointX = 0, pointY = 0, start = { x: 0, y: 0 }, isDragging = false;
-    const container = document.getElementById('tree-container');
-    function zoom(amount) { scale *= amount; updateTransform(); }
-    function resetView() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
-    window.addEventListener('wheel', (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? 0.9 : 1.1); }, { passive: false });
-    window.onmousedown = (e) => { if(e.target.closest('.btn') || e.target.closest('.node-avatar')) return; isDragging = true; start = { x: e.clientX - pointX, y: e.clientY - pointY }; };
-    window.onmousemove = (e) => { if (!isDragging) return; pointX = e.clientX - start.x; pointY = e.clientY - start.y; updateTransform(); };
-    window.onmouseup = () => isDragging = false;
-    function updateTransform() { container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; }
+ <script>
+  // Your specific Firebase keys
+  const firebaseConfig = {
+    apiKey: "AIzaSyCT9sltvZJpDKz8x-y5pI7ABSu7GD3792c",
+    authDomain: "daaboul-family-tree.firebaseapp.com",
+    projectId: "daaboul-family-tree",
+    storageBucket: "daaboul-family-tree.firebasestorage.app",
+    messagingSenderId: "169162734833",
+    appId: "1:169162734833:web:233a37139441336023bd50",
+    measurementId: "G-GENYMJ5HH6",
+    databaseURL: "https://daaboul-family-tree-default-rtdb.firebaseio.com"
+  };
 
-    let currentPhotoTarget = { id: null, type: 'primary' };
-    function triggerPhoto(id, type) { currentPhotoTarget = { id, type }; document.getElementById('photoInput').click(); }
-    function handlePhotoUpload(e) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-          const p = familyData.find(x => x.id === currentPhotoTarget.id);
-          if (currentPhotoTarget.type === 'primary') p.photo = event.target.result;
-          else p.spousePhoto = event.target.result;
-          save();
-      };
-      reader.readAsDataURL(file);
-    }
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database().ref('familyTree');
 
-    let familyData = JSON.parse(localStorage.getItem('daaboul_v_final_color')) || [{ id: 1, name: "Family Root", dob: "1900", gender: "male", parentId: null }];
-    function save() { localStorage.setItem('daaboul_v_final_color', JSON.stringify(familyData)); render(); }
-    
-    function editPerson(id) { 
-      const p = familyData.find(x => x.id === id);
-      p.name = prompt("Full Name:", p.name) || p.name; 
-      p.dob = prompt("Birth Year:", p.dob) || p.dob; 
-      p.gender = (prompt("Gender (male/female):", p.gender) || "male").toLowerCase(); 
-      save(); 
-    }
-    function addChild(pid) { const name = prompt("Child's Name:"); if(name) { familyData.push({ id: Date.now(), name, dob: "2026", gender: "male", parentId: pid }); save(); } }
-    function addSpouse(id) { 
-      const p = familyData.find(x => x.id === id); 
-      p.spouseName = prompt("Spouse Name:"); 
-      p.spouseDOB = prompt("Spouse Birth Year:"); 
-      p.spouseGender = (prompt("Gender (male/female):", "female") || "female").toLowerCase(); 
-      save(); 
-    }
-    function deleteNode(id) { if(confirm("Delete?")) { const del = (tid) => { familyData.filter(x => x.parentId === tid).forEach(c => del(c.id)); familyData = familyData.filter(x => x.id !== tid); }; del(id); save(); } }
-    
-    function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(familyData)], {type:"application/json"})); a.download="daaboul-tree.json"; a.click(); }
-    function importData(e) { const r = new FileReader(); r.onload = (ev) => { familyData = JSON.parse(ev.target.result); save(); }; r.readAsText(e.target.files[0]); }
-    
-    function buildHTML(pid) {
+  let familyData = [];
+  let scale = 1, pointX = 0, pointY = 0, start = { x: 0, y: 0 }, isDragging = false;
+  const container = document.getElementById('tree-container');
+
+  // Load from Cloud automatically
+  db.on('value', (snapshot) => {
+    const data = snapshot.val();
+    // If cloud is empty, start with a fresh root
+    familyData = data ? data : [{ id: 1, name: "Family Root", dob: "1900", gender: "male", parentId: null }];
+    render();
+  });
+
+  // Sync back to Cloud
+  function saveToCloud() {
+    db.set(familyData);
+  }
+
+  // --- Controls ---
+  function zoom(amount) { scale *= amount; updateTransform(); }
+  function resetView() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
+  
+  window.onmousedown = (e) => { 
+    if(e.target.closest('.btn') || e.target.closest('.node-avatar')) return; 
+    isDragging = true; 
+    start = { x: e.clientX - pointX, y: e.clientY - pointY }; 
+  };
+  window.onmousemove = (e) => { 
+    if (!isDragging) return; 
+    pointX = e.clientX - start.x; 
+    pointY = e.clientY - start.y; 
+    updateTransform(); 
+  };
+  window.onmouseup = () => isDragging = false;
+  
+  function updateTransform() { 
+    container.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`; 
+  }
+
+  // --- Family Tree Logic ---
+  function editPerson(id) { 
+    const p = familyData.find(x => x.id === id);
+    p.name = prompt("Full Name:", p.name) || p.name;
+    p.dob = prompt("Birth Year:", p.dob || "1900");
+    p.gender = (prompt("Gender (male/female):", p.gender) || "male").toLowerCase();
+    saveToCloud(); 
+  }
+
+  function addChild(pid) { 
+    const name = prompt("Child's Name:"); 
+    if(name) { 
+      familyData.push({ id: Date.now(), name, dob: "2026", gender: "male", parentId: pid }); 
+      saveToCloud(); 
+    } 
+  }
+
+  function addSpouse(id) { 
+    const p = familyData.find(x => x.id === id); 
+    p.spouseName = prompt("Spouse Name:"); 
+    p.spouseDOB = prompt("Spouse Birth Year:"); 
+    p.spouseGender = (prompt("Gender (male/female):", "female")).toLowerCase(); 
+    saveToCloud(); 
+  }
+
+  function deleteNode(id) { 
+    if(confirm("Delete this person?")) { 
+      familyData = familyData.filter(x => x.id !== id); 
+      saveToCloud(); 
+    } 
+  }
+
+  function render() {
+    const build = (pid) => {
       const items = familyData.filter(x => x.parentId === pid);
       if(!items.length) return "";
       let h = "<ul>";
       items.forEach(m => {
         const hasSpouse = !!m.spouseName;
         h += `<li><div class="tree-node"><div class="avatar-pair">
-          <div class="node-avatar ${m.gender}" style="${m.photo ? `background-image:url(${m.photo});font-size:0` : ''}" onclick="triggerPhoto(${m.id}, 'primary')">${m.name ? m.name[0] : '?'}</div>
-          ${hasSpouse ? `<div class="marriage-line"></div><div class="node-avatar ${m.spouseGender}" style="${m.spousePhoto ? `background-image:url(${m.spousePhoto});font-size:0` : ''}" onclick="triggerPhoto(${m.id}, 'spouse')">${m.spouseName ? m.spouseName[0] : '?'}</div>` : ''}
+          <div class="node-avatar ${m.gender}">${m.name ? m.name[0] : '?'}</div>
+          ${hasSpouse ? `<div class="marriage-line"></div><div class="node-avatar ${m.spouseGender}">${m.spouseName[0]}</div>` : ''}
           </div><div class="name-tag">${m.name} ${hasSpouse ? '& '+m.spouseName : ''}</div>
-          <div class="dob-tag">b. ${m.dob || '????'} ${hasSpouse ? '& b. ' + (m.spouseDOB || '????') : ''}</div>
-          <div class="node-actions"><button class="btn edit-btn" onclick="editPerson(${m.id})">Edit</button><button class="btn add-btn" onclick="addChild(${m.id})">Child</button><button class="btn spouse-btn" onclick="addSpouse(${m.id})">Spouse</button><button class="btn del-btn" onclick="deleteNode(${m.id})">Del</button></div></div>${buildHTML(m.id)}</li>`;
+          <div class="node-actions"><button class="btn edit-btn" onclick="editPerson(${m.id})">Edit</button><button class="btn add-btn" onclick="addChild(${m.id})">Child</button><button class="btn spouse-btn" onclick="addSpouse(${m.id})">Spouse</button></div></div>${build(m.id)}</li>`;
       });
       return h + "</ul>";
-    }
-    function render() { container.innerHTML = buildHTML(null); }
-    render();
-  </script>
-</body>
-</html>
+    };
+    container.innerHTML = build(null);
+  }
+</script>
