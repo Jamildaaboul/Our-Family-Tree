@@ -3,52 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Daaboul Family Tree</title>
+  <title>Daaboul Family Tree</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
-    :root { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --male: #2563eb; --female: #db2777; --line: #64748b; }
+    :root { --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --male: #2563eb; --female: #db2777; --line: #64748b; --highlight: #fef08a; }
     body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; width: 100vw; touch-action: none; }
     
-    .header { position: fixed; top: 0; width: 100%; background: #0f172a; color: white; padding: 10px; text-align: center; z-index: 3000; }
-    .header h2 { margin: 0; font-family: "Lucida Calligraphy", cursive, serif; font-size: 26px; }
+    /* STICKY HEADER & CONTROLS */
+    .top-interface { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0f172a; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .header-title { color: white; margin: 0; font-family: "Lucida Calligraphy", cursive, serif; font-size: 20px; }
 
-    /* FIXED TOOLBAR: Increased z-index so it stays on top of the tree */
-    .toolbar { position: fixed; top: 75px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 4000; display: flex; gap: 10px; border: 2px solid #3b82f6; align-items: center; pointer-events: auto; }
+    .main-toolbar { background: white; padding: 8px 12px; border-radius: 50px; display: flex; gap: 10px; align-items: center; border: 2px solid #3b82f6; pointer-events: auto; }
+    .search-input { padding: 8px 15px; border-radius: 20px; border: 2px solid #cbd5e1; width: 180px; font-size: 14px; outline: none; pointer-events: auto; }
 
-    #viewport { width: 100vw; height: 100vh; cursor: grab; display: flex; align-items: center; justify-content: center; touch-action: none; z-index: 1000; }
-    #tree-container { transform-origin: center center; padding-top: 150px; pointer-events: auto; }
+    /* VIEWPORT */
+    #viewport { width: 100vw; height: 100vh; cursor: grab; display: flex; align-items: center; justify-content: center; z-index: 1000; position: absolute; top: 0; left: 0; }
+    #tree-container { transform-origin: center center; padding-top: 180px; }
 
+    /* TREE ELEMENTS */
     .tree ul { display: flex; justify-content: center; padding: 20px 0; position: relative; list-style: none; }
     .tree li { position: relative; padding: 20px 10px 0; }
     .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 3px solid var(--line); width: 50%; height: 20px; }
     .tree li::after { right: auto; left: 50%; border-left: 3px solid var(--line); }
     
-    .tree-node { background: var(--card); border: 2px solid #cbd5e1; border-radius: 20px; width: 240px; padding: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .tree-node { background: var(--card); border: 2px solid #cbd5e1; border-radius: 20px; width: 240px; padding: 15px; display: inline-block; }
+    .highlighted { background: var(--highlight) !important; border-color: #eab308 !important; box-shadow: 0 0 20px #facc15; }
+
     .avatar-pair { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
-    .node-avatar { width: 55px; height: 55px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; border: 3px solid white; background-size: cover; background-position: center; }
+    .node-avatar { width: 50px; height: 50px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; background-size: cover; background-position: center; }
     .male { background-color: var(--male); } .female { background-color: var(--female); }
     
-    .btn { padding: 8px 6px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-    .btn-edit { background: #e2e8f0; } .btn-child { background: #3b82f6; color: white; } .btn-spouse { background: #10b981; color: white; } .btn-del { background: #ef4444; color: white; }
+    .btn { padding: 8px; border: none; border-radius: 8px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; touch-action: manipulation; }
     .node-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; }
 
-    /* LARGER ZOOM BUTTONS FOR TABLET */
-    .zoom-ctrl { font-size: 22px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; border-radius: 50%; border: 2px solid #cbd5e1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    /* BIG ZOOM BUTTONS */
+    .zoom-btn { font-size: 24px; width: 45px; height: 45px; border: none; background: #f1f5f9; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; border: 1px solid #ccc; }
+    .zoom-btn:active { background: #cbd5e1; transform: scale(0.9); }
   </style>
 </head>
 <body>
-  <div class="header"><h2>The Daaboul Family Tree</h2></div>
-  
-  <div class="toolbar">
-    <div class="zoom-ctrl" onclick="zoom(0.8); event.stopPropagation();">➖</div>
-    <button class="btn" style="font-size: 18px;" onclick="resetView(); event.stopPropagation();">🏠</button>
-    <div class="zoom-ctrl" onclick="zoom(1.2); event.stopPropagation();">➕</div>
-    <button class="btn" style="background:#475569;color:white" onclick="document.getElementById('f').click(); event.stopPropagation();">📂 Load</button>
-    <input type="file" id="f" style="display:none" onchange="importData(event)">
+
+  <div class="top-interface">
+    <h2 class="header-title">The Daaboul Family Tree</h2>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;">
+      <div class="main-toolbar">
+        <button class="zoom-btn" onclick="zoom(0.8)">➖</button>
+        <button class="btn" style="font-size: 18px;" onclick="resetView()">🏠</button>
+        <button class="zoom-btn" onclick="zoom(1.2)">➕</button>
+      </div>
+      <input type="text" class="search-input" id="treeSearch" placeholder="🔍 Search Name..." oninput="runSearch()">
+      <button class="btn" style="background:#475569;color:white; padding: 10px 15px;" onclick="document.getElementById('f').click()">📂 Load File</button>
+      <input type="file" id="f" style="display:none" onchange="importData(event)">
+    </div>
   </div>
 
-  <div id="viewport"><div id="tree-container" class="tree"></div></div>
+  <div id="viewport">
+    <div id="tree-container" class="tree"></div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -78,11 +90,17 @@
 
     function importData(e) {
       const r = new FileReader();
-      r.onload = ev => {
-        familyData = JSON.parse(ev.target.result);
-        render(); save();
-      };
+      r.onload = ev => { familyData = JSON.parse(ev.target.result); render(); save(); };
       r.readAsText(e.target.files[0]);
+    }
+
+    function runSearch() {
+      const term = document.getElementById('treeSearch').value.toLowerCase();
+      document.querySelectorAll('.tree-node').forEach(node => {
+        const name = node.querySelector('.name-tag').innerText.toLowerCase();
+        if(term && name.includes(term)) node.classList.add('highlighted');
+        else node.classList.remove('highlighted');
+      });
     }
 
     function render() {
@@ -92,17 +110,17 @@
         let h = "<ul>";
         items.forEach(m => {
           const hasS = !!m.spouseName;
-          h += `<li><div class="tree-node">
+          h += `<li><div class="tree-node" id="node-${m.id}">
             <div class="avatar-pair">
               <div class="node-avatar ${m.gender}" style="background-image:url('${m.photo || ''}')">${m.photo ? '' : (m.name ? m.name[0] : '?')}</div>
               ${hasS ? `<div class="node-avatar ${m.spouseGender || 'female'}" style="background-image:url('${m.spousePhoto || ''}')">${m.spousePhoto ? '' : m.spouseName[0]}</div>` : ''}
             </div>
-            <div class="name-tag">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</div>
+            <div class="name-tag" style="font-weight:bold; font-size:14px;">${m.name || 'Unknown'} ${hasS ? '& '+m.spouseName : ''}</div>
             <div class="node-actions">
-              <button class="btn btn-edit" onclick="editP(${m.id})">Edit</button>
-              <button class="btn btn-child" onclick="addC(${m.id})">+Child</button>
-              <button class="btn btn-spouse" onclick="addS(${m.id})">+Spouse</button>
-              <button class="btn btn-del" onclick="delP(${m.id})">Del</button>
+              <button class="btn" style="background:#e2e8f0" onclick="editP(${m.id})">Edit</button>
+              <button class="btn" style="background:#3b82f6;color:white" onclick="addC(${m.id})">+Child</button>
+              <button class="btn" style="background:#10b981;color:white" onclick="addS(${m.id})">+Spouse</button>
+              <button class="btn" style="background:#ef4444;color:white" onclick="delP(${m.id})">Del</button>
             </div>
           </div>${build(m.id)}</li>`;
         });
@@ -111,42 +129,28 @@
       document.getElementById('tree-container').innerHTML = build(null) || build(undefined);
     }
 
-    function editP(id) {
-      const p = familyData.find(x => x.id == id);
-      p.name = prompt("Name:", p.name);
-      p.gender = (prompt("Gender (male/female):", p.gender)).toLowerCase();
-      p.photo = prompt("Photo URL:", p.photo || "");
-      save();
-    }
-    function addC(pid) {
-      const n = prompt("Child Name:");
-      if(n) { familyData.push({id: Date.now(), name: n, gender: "male", parentId: pid}); save(); }
-    }
-    function addS(id) {
-      const p = familyData.find(x => x.id == id);
-      p.spouseName = prompt("Spouse Name:");
-      save();
-    }
-    function delP(id) {
-      if(confirm("Delete person?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
-    }
-
+    // ZOOM & DRAG
     let s = 1, x = 0, y = 0, startX = 0, startY = 0, isDown = false;
     const ct = document.getElementById('tree-container');
 
-    function zoom(amt) { s *= amt; up(); }
-    function resetView() { s = 1; x = 0; y = 0; up(); }
-    function up() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
+    function zoom(amt) { s *= amt; apply(); }
+    function resetView() { s = 1; x = 0; y = 0; apply(); }
+    function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
 
-    // Desktop Mouse
-    window.onmousedown = e => { if(e.target.closest('.toolbar') || e.target.closest('.btn')) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
-    window.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; up(); };
-    
-    // Tablet Touch
-    window.ontouchstart = e => { if(e.target.closest('.toolbar') || e.target.closest('.btn')) return; isDown = true; startX = e.touches[0].clientX - x; startY = e.touches[0].clientY - y; };
-    window.ontouchmove = e => { if(!isDown) return; x = e.touches[0].clientX - startX; y = e.touches[0].clientY - startY; up(); };
-    
+    const start = (ex, ey) => { isDown = true; startX = ex - x; startY = ey - y; };
+    const move = (ex, ey) => { if(!isDown) return; x = ex - startX; y = ey - startY; apply(); };
+
+    window.onmousedown = e => { if(e.target.closest('.top-interface') || e.target.closest('.btn')) return; start(e.clientX, e.clientY); };
+    window.onmousemove = e => move(e.clientX, e.clientY);
+    window.ontouchstart = e => { if(e.target.closest('.top-interface') || e.target.closest('.btn')) return; start(e.touches[0].clientX, e.touches[0].clientY); };
+    window.ontouchmove = e => move(e.touches[0].clientX, e.touches[0].clientY);
     window.onmouseup = window.ontouchend = () => isDown = false;
+
+    // Person logic
+    function editP(id) { const p = familyData.find(x => x.id == id); p.name = prompt("Name:", p.name); p.photo = prompt("Photo URL:", p.photo || ""); save(); }
+    function addC(pid) { const n = prompt("Child Name:"); if(n) { familyData.push({id: Date.now(), name: n, gender: "male", parentId: pid}); save(); } }
+    function addS(id) { const p = familyData.find(x => x.id == id); p.spouseName = prompt("Spouse Name:"); save(); }
+    function delP(id) { if(confirm("Delete?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); } }
   </script>
 </body>
 </html>
