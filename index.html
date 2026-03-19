@@ -8,10 +8,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     :root { 
-      /* NEW PASTEL SPRING BACKGROUND COLORS */
-      --pastel-blush: #fff0f5; /* Soft Blossom Pink */
-      --pastel-sky: #eaf4f4;   /* Pale Spring Sky/Mint */
-      --pastel-mint: #f0fdf4;  /* Fresh Pastel Green */
+      /* TRUE PASTEL COLORS (Much more vibrant) */
+      --pastel-blush: #ffe5ec; /* Distinct Soft Pink */
+      --pastel-sky: #e0f2fe;   /* Distinct Sky Blue */
+      --pastel-mint: #dcfce7;  /* Distinct Mint Green */
       
       --vine-green: #8b9a73; 
       --gold-main: #cda85f; 
@@ -24,16 +24,17 @@
     
     html, body { 
       font-family: 'Georgia', serif; 
-      /* Dreamy pastel spring gradient */
-      background: radial-gradient(circle at top left, var(--pastel-blush) 0%, var(--pastel-sky) 50%, var(--pastel-mint) 100%);
-      background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'), radial-gradient(circle at top left, var(--pastel-blush) 0%, var(--pastel-sky) 50%, var(--pastel-mint) 100%);
+      /* Removed the texture to let the pure pastel colors shine */
+      background: linear-gradient(135deg, var(--pastel-blush) 0%, var(--pastel-sky) 50%, var(--pastel-mint) 100%);
+      background-attachment: fixed; /* Keeps the background smooth when you drag */
       margin: 0; padding: 0; overflow: hidden; 
       height: 100%; width: 100%; touch-action: none; 
     }
     
     .interface-layer { 
       position: fixed; top: 0; left: 0; right: 0; z-index: 999999; 
-      background: rgba(253, 251, 247, 0.95); padding: 15px; 
+      background: rgba(255, 255, 255, 0.85); /* Frosty transparent white */
+      padding: 15px; 
       display: flex; flex-direction: column; align-items: center; gap: 10px; 
       box-shadow: 0 4px 15px rgba(0,0,0,0.1); pointer-events: auto;
       border-bottom: 2px solid var(--vine-green);
@@ -101,7 +102,6 @@
 
     .tree-node { 
       background: var(--plaque-bg);
-      background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
       border: 3px solid var(--gold-main); 
       border-radius: 30px; 
       min-width: 160px;
@@ -145,9 +145,6 @@
       position: absolute; bottom: -14px; width: 120%;
     }
     
-    /* --------------------------------------------------- */
-    /* VIBRANT SPRING BUTTONS                              */
-    /* --------------------------------------------------- */
     .btn { 
       padding: 4px 10px; border: 1px solid rgba(0,0,0,0.15); border-radius: 12px; 
       font-size: 9px; cursor: pointer; font-weight: bold; text-transform: uppercase; 
@@ -157,11 +154,10 @@
     }
     .btn:active { transform: scale(0.95); }
     
-    .btn-edit   { background: #a2cbf0; } /* Clear Sky Blue */
-    .btn-child  { background: #b0e5b0; } /* Fresh Spring Green */
-    .btn-spouse { background: #fce0a2; } /* Sunny Buttercup Yellow */
-    .btn-del    { background: #f2a6a6; color: #5a1818; } /* Soft Tulip Red */
-    /* --------------------------------------------------- */
+    .btn-edit   { background: #a2cbf0; } 
+    .btn-child  { background: #b0e5b0; } 
+    .btn-spouse { background: #fce0a2; } 
+    .btn-del    { background: #f2a6a6; color: #5a1818; } 
 
     .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--vine-green); background: #fff; color: var(--vine-green); font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .zoom-btn:active { transform: scale(0.9); background: var(--button-bg); }
@@ -347,71 +343,3 @@
         apply();
       }
     }
-
-    function pickNewFile(id, isSpouse) {
-      if (document.body.classList.contains('view-mode')) return; 
-      activeTarget = { id, isSpouse };
-      document.getElementById('imagePicker').click();
-    }
-
-    document.getElementById('imagePicker').onchange = function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const person = familyData.find(x => x.id == activeTarget.id);
-        if(activeTarget.isSpouse) person.spousePhoto = event.target.result;
-        else person.photo = event.target.result;
-        save();
-      };
-      reader.readAsDataURL(file);
-    };
-
-    function editP(id) {
-      const p = familyData.find(x => x.id == id);
-      p.name = prompt("Name:", p.name);
-      p.dob = prompt("Year:", p.dob || "");
-      save();
-    }
-    function addC(pid) {
-      const n = prompt("Child Name:");
-      if(n) { familyData.push({id: Date.now(), name: n, gender: "male", parentId: pid, dob: ""}); save(); }
-    }
-    function addS(id) {
-      const p = familyData.find(x => x.id == id);
-      p.spouseName = prompt("Spouse Name:");
-      p.spouseDOB = prompt("Spouse Year:");
-      save();
-    }
-    function delP(id) {
-      if(confirm("Delete person and descendants?")) { familyData = familyData.filter(x => x.id != id && x.parentId != id); save(); }
-    }
-
-    let s = 1, x = 0, y = 120, startX = 0, startY = 0, isDown = false;
-    const ct = document.getElementById('tree-container');
-    const vp = document.getElementById('viewport');
-    
-    function triggerZoom(event, amt) {
-      event.preventDefault(); event.stopPropagation();
-      s *= amt; apply();
-    }
-    
-    function resetView() { centerOnRoot(); }
-    function apply() { ct.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
-
-    function isUI(e) { return e.target.closest('#top-nav') || e.target.closest('input') || e.target.closest('.btn') || e.target.closest('.node-actions') || e.target.closest('.node-avatar'); }
-
-    vp.onmousedown = e => { if(isUI(e)) return; isDown = true; startX = e.clientX - x; startY = e.clientY - y; };
-    vp.onmousemove = e => { if(!isDown) return; x = e.clientX - startX; y = e.clientY - startY; apply(); };
-    vp.ontouchstart = e => { if(isUI(e)) return; isDown = true; startX = e.touches[0].clientX - x; startY = e.touches[0].clientY - y; };
-    vp.ontouchmove = e => { if(!isDown) return; x = e.touches[0].clientX - startX; y = e.touches[0].clientY - startY; apply(); };
-    window.onmouseup = window.ontouchend = () => isDown = false;
-
-    function importData(e) {
-      const r = new FileReader();
-      r.onload = ev => { familyData = JSON.parse(ev.target.result); isFirstLoad = true; render(); save(); };
-      r.readAsText(e.target.files[0]);
-    }
-  </script>
-</body>
-</html>
