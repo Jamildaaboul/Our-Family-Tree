@@ -8,7 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     :root { 
-      var(--spring-light): #fdfbf7; 
+      --spring-light: #fdfbf7; 
       --spring-bg: #f4eee1;
       --vine-green: #8b9a73; 
       --gold-main: #cda85f; 
@@ -140,16 +140,26 @@
       display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; 
       position: absolute; bottom: -14px; width: 120%;
     }
+    
+    /* --------------------------------------------------- */
+    /* UPDATED: VIBRANT SPRING BUTTONS                     */
+    /* --------------------------------------------------- */
     .btn { 
-      padding: 4px 10px; border: 1px solid var(--gold-main); border-radius: 12px; 
+      padding: 4px 10px; border: 1px solid rgba(0,0,0,0.15); border-radius: 12px; 
       font-size: 9px; cursor: pointer; font-weight: bold; text-transform: uppercase; 
-      background: var(--button-bg); color: var(--text-dark); 
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       font-family: 'Georgia', serif; letter-spacing: 0.5px;
+      color: var(--text-dark);
     }
     .btn:active { transform: scale(0.95); }
-    .btn-red { background: #e3a9a9; color: #5a1818; border-color: #c98888; }
     
+    /* More distinct/vibrant Spring Colors */
+    .btn-edit   { background: #a2cbf0; } /* Clear Sky Blue */
+    .btn-child  { background: #b0e5b0; } /* Fresh Spring Green */
+    .btn-spouse { background: #fce0a2; } /* Sunny Buttercup Yellow */
+    .btn-del    { background: #f2a6a6; color: #5a1818; } /* Soft Tulip Red */
+    /* --------------------------------------------------- */
+
     .zoom-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--vine-green); background: #fff; color: var(--vine-green); font-size: 26px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .zoom-btn:active { transform: scale(0.9); background: var(--button-bg); }
     
@@ -220,7 +230,6 @@
     db.on('value', snap => {
       const data = snap.val();
       if(data) {
-        // CRASH PROTECTION: Filters out nulls or undefined entries that break the code
         let rawData = Array.isArray(data) ? data : Object.values(data);
         familyData = rawData.filter(x => x !== null && x !== undefined);
         render();
@@ -245,7 +254,7 @@
       const btn = document.getElementById('viewModeBtn');
       if (document.body.classList.contains('view-mode')) {
         btn.innerHTML = '✏️ Edit Mode';
-        btn.style.background = '#e3a9a9'; 
+        btn.style.background = '#f2a6a6'; 
         btn.style.color = '#5a1818';
       } else {
         btn.innerHTML = '👁️ View Mode';
@@ -268,7 +277,7 @@
         if(!nodes || nodes.length === 0) return "";
         let h = "<ul>";
         nodes.forEach(m => {
-          if (!m) return; // EXTRA CRASH PROTECTION
+          if (!m) return; 
 
           const hasS = !!m.spouseName;
           const p1 = m.photo ? `style="background-image:url('${m.photo}')"` : '';
@@ -296,10 +305,10 @@
                 <span class="dob-tag">${dobDisplay}</span>
               </div>
               <div class="node-actions">
-                <button class="btn" onclick="editP(${m.id})">Edit</button>
-                <button class="btn" onclick="addC(${m.id})">+Child</button>
-                <button class="btn" onclick="addS(${m.id})">+Spouse</button>
-                <button class="btn btn-red" onclick="delP(${m.id})">Del</button>
+                <button class="btn btn-edit" onclick="editP(${m.id})">Edit</button>
+                <button class="btn btn-child" onclick="addC(${m.id})">+Child</button>
+                <button class="btn btn-spouse" onclick="addS(${m.id})">+Spouse</button>
+                <button class="btn btn-del" onclick="delP(${m.id})">Del</button>
               </div>
             </div>
             ${build(children)}
